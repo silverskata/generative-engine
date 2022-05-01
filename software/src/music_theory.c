@@ -1,0 +1,65 @@
+#include "../includes/music_theory.h"
+
+key keys [] = {
+    {.name = "C",.number = C, .modulation = {0,0,0,0,0,0,0}},
+    {.name = "D",.number = D, .modulation = {0,0,1,0,0,0,1}},
+    {.name = "E",.number = E, .modulation = {0,1,1,0,0,1,1}},
+    {.name = "F",.number = F, .modulation = {0,0,0,-1,0,0,0}},
+    {.name = "G",.number = G, .modulation = {0,0,0,0,0,0,1}},
+    {.name = "A",.number = A, .modulation = {0,0,1,0,0,1,1}},
+    {.name = "B",.number = B, .modulation = {0,1,1,0,1,1,1}},
+    {.name = "C#",.number = C_SHARP, .modulation = {1,1,1,1,1,1,1}},
+    {.name = "D#",.number = D_SHARP, .modulation = {1,1,2,1,1,0,0}},
+    {.name = "0",.number = 0xFF, .modulation = {0}},
+    {.name = "F#",.number = F_SHARP, .modulation = {1,1,1,0,1,1,1}},
+    {.name = "G#",.number = G_SHARP, .modulation = {1,1,0,1,1,0,0}},
+    {.name = "Db",.number = D_FLAT, .modulation = {-1,-1,0,-1,-1,-1,0}},
+    {.name = "Eb",.number = E_FLAT, .modulation = {-1,-1,0,-1,-1,-1,0}},
+    {.name = "0",.number = 0xFF, .modulation = {0}},
+    {.name = "0",.number = 0xFF, .modulation = {0}},
+    {.name = "Ab",.number = A_FLAT, .modulation = {-1,-1,0,-1,-1,-1,0}},
+    {.name = "Bb",.number = E_FLAT, .modulation = {-1,-1,0,-1,-1,-1,0}},
+};
+
+    char key_list [19][3] = {{"C"},{"D"},{"E"},{"F"},{"G"},{"A"},{"B"},{"C#"},{"D#"},{""},{"F#"},{"G#"},{"Db"},{"Eb"},{""},{""},{"Ab"},{"Bb"}};
+
+  note scale_modulation []  = {
+      {"Cbb","Cb","C","C#","C##"},
+      {"Dbb","Db","D","D#","D##"},
+      {"Ebb","Eb","E","E#","E##"},
+      {"Fbb","Fb","F","F#","F##"},
+      {"Gbb","Gb","G","G#","G##"},
+      {"Abb","Ab","A","A#","A##"},
+      {"Bbb","Bb","B","B#","B##"}};
+
+   const scale scales []  ={
+        {0x0AB5,
+        {"Ionian"},
+        {0,0,0,0,0,0,0}},
+        {0x06AD,
+        {"Dorian"},
+        {0,0,-1,0,0,0,-1}},
+        {0x05AB,
+        {"Phrygian"},
+        {0,-1,-1,0,0,-1,-1}},
+        {0x0AD5,
+        {"Lydian"},
+        {0,0,0,1,0,0,0}},
+        {0x06B5,
+        {"Mixolydian"},
+        {0,0,0,0,0,0,-1}},
+        {0x05AD,
+        {"Aeolian"},
+        {0,0,-1,0,0,-1,-1}},
+        {0x056B,
+        {"Locrian"},
+        {0,-1,-1,0,-1,-1,-1}},
+        {0x0FFF,
+        {"Chromatic"},
+        {1,1,1,1,1,1,1,1,1,1,1}},
+        {0x0FFF,
+        {"User1"},
+        {1,1,1,1,1,1,1}},
+        {0x0FFF,
+        {"User2"},
+        {1,1,1,1,1,1,1}}};
