@@ -1,3 +1,35 @@
+/*
+MIT License
+
+Copyright (c) 2021 David Schramm
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/** 
+* @file ssd1306.h
+* 
+* simple driver for ssd1306 displays
+*/
+
+#ifndef _inc_ssd1306
+#define _inc_ssd1306
 #include <pico/stdlib.h>
 #include <hardware/i2c.h>
 
@@ -52,7 +84,6 @@ typedef struct {
 *	@retval false if initialization failed
 */
 bool display_init(ssd1306_t *p, uint16_t width, uint16_t height, uint8_t address, i2c_inst_t *i2c_instance);
-
 
 /**
 *	@brief turn off display
@@ -177,7 +208,18 @@ void ssd1306_bmp_show_image(ssd1306_t *p, const uint8_t *data, const long size);
 	@param[in] c : character to draw
 */
 void display_char_font(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char c);
+	
+	
+/**
+	@brief write a string with selected spacing
 
+	@param[in] p : instance of display
+	@param[in] x : x starting position of char
+	@param[in] y : y starting position of char
+	@param[in] scale : 0 is normal 3 is not spacing. negative values give greater spacing.
+	@param[in] c : character to draw
+*/
+void display_write_tight(ssd1306_t *p, uint32_t x, uint32_t y, int32_t scale, char *s);
 
 /**
 	@brief draw string with given font
@@ -202,22 +244,59 @@ void ssd1306_draw_string_with_font(ssd1306_t *p, uint32_t x, uint32_t y, uint32_
 */
 void display_string(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, char *s);
 
-/**
-	@brief draw a circle
-
-	@param[in] p : instance of display
-	@param[in] x0 : x center position of circle
-	@param[in] y0 : y center position of circle
-	@param[in] radius : radius of circle
-*/
 void display_circle(ssd1306_t *p, uint8_t x0, uint8_t y0, uint8_t radius);
 
-/**
-	@brief draw a filled circle
-
-	@param[in] p : instance of display
-	@param[in] x0 : x center position of circle
-	@param[in] y0 : y center position of circle
-	@param[in] radius : radius of circle
-*/
 void display_fill_circle(ssd1306_t *p, int8_t x0, int8_t y0, int8_t radius);
+
+void draw_wholenote(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_seminote(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_down_seminote(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_4_note(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_8_note(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_16_note(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_32_note(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_wholerest(ssd1306_t *disp, int16_t x);
+
+void draw_semirest(ssd1306_t *disp, int16_t x);
+
+void draw_4_rest(ssd1306_t *disp, int16_t x);
+
+void draw_8_rest(ssd1306_t *disp, int16_t x);
+
+void draw_16_rest(ssd1306_t *disp, int16_t x);
+
+void draw_down_8_note(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_down_4_note(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_down_16_note(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_dotted(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_logo(ssd1306_t *disp);
+
+void display_setup(i2c_inst_t *i2c);
+
+void display_pixel2(ssd1306_t *p, uint32_t x, uint32_t y);
+
+void draw_selector(ssd1306_t *disp, int16_t x,int16_t y,int16_t space);
+
+void display_black_square(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+
+void display_string_test(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, char *s);
+
+void display_box_no_top(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+
+void draw_up_octave(ssd1306_t *disp, int16_t x,int16_t y, uint8_t amount);
+
+void draw_lowered(ssd1306_t *disp, int16_t x,int16_t y);
+
+void draw_raised(ssd1306_t *disp, int16_t x,int16_t y);
+#endif

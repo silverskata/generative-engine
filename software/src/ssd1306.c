@@ -30,108 +30,25 @@ SOFTWARE.
 #include <string.h>
 #include <stdio.h>
 
-#include "../includes/display.h"
+#include "../include/ssd1306.h"
+#include "../include/font.h"
 
-const uint8_t font_8x5[] =
-{
-			8, 5, //height, width
-			0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x5F, 0x00, 0x00,
-			0x00, 0x07, 0x00, 0x07, 0x00,
-			0x14, 0x7F, 0x14, 0x7F, 0x14,
-			0x24, 0x2A, 0x7F, 0x2A, 0x12,
-			0x23, 0x13, 0x08, 0x64, 0x62,
-			0x36, 0x49, 0x56, 0x20, 0x50,
-			0x00, 0x08, 0x07, 0x03, 0x00,
-			0x00, 0x1C, 0x22, 0x41, 0x00,
-			0x00, 0x41, 0x22, 0x1C, 0x00,
-			0x2A, 0x1C, 0x7F, 0x1C, 0x2A,
-			0x08, 0x08, 0x3E, 0x08, 0x08,
-			0x00, 0x80, 0x70, 0x30, 0x00,
-			0x08, 0x08, 0x08, 0x08, 0x08,
-			0x00, 0x00, 0x60, 0x60, 0x00,
-			0x20, 0x10, 0x08, 0x04, 0x02,
-			0x3E, 0x51, 0x49, 0x45, 0x3E,
-			0x00, 0x42, 0x7F, 0x40, 0x00,
-			0x72, 0x49, 0x49, 0x49, 0x46,
-			0x21, 0x41, 0x49, 0x4D, 0x33,
-			0x18, 0x14, 0x12, 0x7F, 0x10,
-			0x27, 0x45, 0x45, 0x45, 0x39,
-			0x3C, 0x4A, 0x49, 0x49, 0x31,
-			0x41, 0x21, 0x11, 0x09, 0x07,
-			0x36, 0x49, 0x49, 0x49, 0x36,
-			0x46, 0x49, 0x49, 0x29, 0x1E,
-			0x00, 0x00, 0x14, 0x00, 0x00,
-			0x00, 0x40, 0x34, 0x00, 0x00,
-			0x00, 0x08, 0x14, 0x22, 0x41,
-			0x14, 0x14, 0x14, 0x14, 0x14,
-			0x00, 0x41, 0x22, 0x14, 0x08,
-			0x02, 0x01, 0x59, 0x09, 0x06,
-			0x3E, 0x41, 0x5D, 0x59, 0x4E,
-			0x7C, 0x12, 0x11, 0x12, 0x7C,
-			0x7F, 0x49, 0x49, 0x49, 0x36,
-			0x3E, 0x41, 0x41, 0x41, 0x22,
-			0x7F, 0x41, 0x41, 0x41, 0x3E,
-			0x7F, 0x49, 0x49, 0x49, 0x41,
-			0x7F, 0x09, 0x09, 0x09, 0x01,
-			0x3E, 0x41, 0x41, 0x51, 0x73,
-			0x7F, 0x08, 0x08, 0x08, 0x7F,
-			0x00, 0x41, 0x7F, 0x41, 0x00,
-			0x20, 0x40, 0x41, 0x3F, 0x01,
-			0x7F, 0x08, 0x14, 0x22, 0x41,
-			0x7F, 0x40, 0x40, 0x40, 0x40,
-			0x7F, 0x02, 0x1C, 0x02, 0x7F,
-			0x7F, 0x04, 0x08, 0x10, 0x7F,
-			0x3E, 0x41, 0x41, 0x41, 0x3E,
-			0x7F, 0x09, 0x09, 0x09, 0x06,
-			0x3E, 0x41, 0x51, 0x21, 0x5E,
-			0x7F, 0x09, 0x19, 0x29, 0x46,
-			0x26, 0x49, 0x49, 0x49, 0x32,
-			0x03, 0x01, 0x7F, 0x01, 0x03,
-			0x3F, 0x40, 0x40, 0x40, 0x3F,
-			0x1F, 0x20, 0x40, 0x20, 0x1F,
-			0x3F, 0x40, 0x38, 0x40, 0x3F,
-			0x63, 0x14, 0x08, 0x14, 0x63,
-			0x03, 0x04, 0x78, 0x04, 0x03,
-			0x61, 0x59, 0x49, 0x4D, 0x43,
-			0x00, 0x7F, 0x41, 0x41, 0x41,
-			0x02, 0x04, 0x08, 0x10, 0x20,
-			0x00, 0x41, 0x41, 0x41, 0x7F,
-			0x04, 0x02, 0x01, 0x02, 0x04,
-			0x40, 0x40, 0x40, 0x40, 0x40,
-			0x00, 0x03, 0x07, 0x08, 0x00,
-			0x20, 0x54, 0x54, 0x78, 0x40,
-			0x7F, 0x28, 0x44, 0x44, 0x38,
-			0x38, 0x44, 0x44, 0x44, 0x28,
-			0x38, 0x44, 0x44, 0x28, 0x7F,
-			0x38, 0x54, 0x54, 0x54, 0x18,
-			0x00, 0x08, 0x7E, 0x09, 0x02,
-			0x18, 0xA4, 0xA4, 0x9C, 0x78,
-			0x7F, 0x08, 0x04, 0x04, 0x78,
-			0x00, 0x44, 0x7D, 0x40, 0x00,
-			0x20, 0x40, 0x40, 0x3D, 0x00,
-			0x7F, 0x10, 0x28, 0x44, 0x00,
-			0x00, 0x41, 0x7F, 0x40, 0x00,
-			0x7C, 0x04, 0x78, 0x04, 0x78,
-			0x7C, 0x08, 0x04, 0x04, 0x78,
-			0x38, 0x44, 0x44, 0x44, 0x38,
-			0xFC, 0x18, 0x24, 0x24, 0x18,
-			0x18, 0x24, 0x24, 0x18, 0xFC,
-			0x7C, 0x08, 0x04, 0x04, 0x08,
-			0x48, 0x54, 0x54, 0x54, 0x24,
-			0x04, 0x04, 0x3F, 0x44, 0x24,
-			0x3C, 0x40, 0x40, 0x20, 0x7C,
-			0x1C, 0x20, 0x40, 0x20, 0x1C,
-			0x3C, 0x40, 0x30, 0x40, 0x3C,
-			0x44, 0x28, 0x10, 0x28, 0x44,
-			0x4C, 0x90, 0x90, 0x90, 0x7C,
-			0x44, 0x64, 0x54, 0x4C, 0x44,
-			0x00, 0x08, 0x36, 0x41, 0x00,
-			0x00, 0x00, 0x77, 0x00, 0x00,
-			0x00, 0x41, 0x36, 0x08, 0x00,
-			0x02, 0x01, 0x02, 0x04, 0x02,
-};
+char left_bracket[]={"["};
+char right_bracket[]={"]"};
+char quarterrest1[] ={(char)129};
+char quarterrest2[] ={(char)130};
+char eightrest[] ={(char)128};
+char sixteenthrest[] ={(char)131};
+char up_arrow[] ={(char)182};
+char raised_symbol[]={183};
+char lowered_symbol[]={184};
 
+
+char logo_row1[]={132,133,134,135,136,137,138,139,140,141,0};
+char logo_row2[]={142,143,144,145,146,147,148,149,150,151,0};
+char logo_row3[]={152,153,154,155,156,157,158,159,160,161,0};
+char logo_row4[]={162,163,164,165,166,167,168,169,170,171,0};
+char logo_row5[]={172,173,174,175,176,177,178,179,180,181,0};
 
 inline static void swap(uint32_t *a, uint32_t *b) {
     uint32_t *t=a;
@@ -150,6 +67,14 @@ inline static void private_write(i2c_inst_t *i2c, uint8_t addr, const uint8_t *s
     default:
         break;
     }
+}
+
+void display_setup(i2c_inst_t *i2c){
+    i2c_init(i2c, 400000);
+    gpio_set_function(9, GPIO_FUNC_I2C);
+    gpio_set_function(8, GPIO_FUNC_I2C);
+    gpio_pull_up(8);
+    gpio_pull_up(9);
 }
 
 inline static void display_write(ssd1306_t *p, uint8_t val) {
@@ -214,6 +139,7 @@ bool display_init(ssd1306_t *p, uint16_t width, uint16_t height, uint8_t address
     return true;
 }
 
+
 inline void ssd1306_deinit(ssd1306_t *p) {
     free(p->buffer-1);
 }
@@ -245,6 +171,7 @@ void display_pixel(ssd1306_t *p, uint32_t x, uint32_t y) {
     p->buffer[x+p->width*(y>>3)]|=0x1<<(y&0x07); // y>>3==y/8 && y&0x7==y%8
 }
 
+
 void display_line(ssd1306_t *p, int32_t x1, int32_t y1, int32_t x2, int32_t y2) {
     if(x1>x2) {
         swap(&x1, &x2);
@@ -273,13 +200,25 @@ void display_square(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, uint32
             display_pixel(p, x+i, y+j);
 
 }
+void display_black_square(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+    for(uint32_t i=0; i<width; ++i)
+        for(uint32_t j=0; j<height; ++j)
+            display_pixel2(p, x+i, y+j);
 
+}
 void display_box(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
     display_line(p, x, y, x+width, y);
     display_line(p, x, y+height, x+width, y+height);
     display_line(p, x, y, x, y+height);
     display_line(p, x+width, y, x+width, y+height);
 }
+
+void display_box_no_top(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+    display_line(p, x, y+height, x+width, y+height);
+    display_line(p, x, y, x, y+height);
+    display_line(p, x+width, y, x+width, y+height);
+}
+
 
 void display_circle(ssd1306_t *p, uint8_t x0, uint8_t y0, uint8_t radius){
   int8_t x = 0, y = radius;
@@ -328,23 +267,57 @@ void display_fill_circle(ssd1306_t *p, int8_t x0, int8_t y0, int8_t radius) {
 }
 
 void display_char_font(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char c) {
-    if(c > '~')
+    if(c > 189)
         return;
 
     for(uint8_t i=0; i<font[1]; ++i) {
         uint8_t line=(uint8_t)(font[(c-0x20)*font[1]+i+2]);
 
-        for(int8_t j=0; j<font[0]; ++j, line>>=1) {
+        for(int8_t j=0; j<8; ++j, line>>=1) {
             if(line & 1 ==1)
                 display_square(p, x+i*scale, y+j*scale, scale, scale);
         }
     }
 }
 
+void display_char_font2(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char c) {
+    if(c > 181)
+        return;
+
+    for(uint8_t i=0; i<font[1]; ++i) {
+        uint8_t line=(uint8_t)(font[(c-0x20)*font[1]+i+2]);
+
+        for(int8_t j=0; j<8; ++j, line>>=1) {
+            if(line & 1 ==1)
+                display_black_square(p, x+i*scale, y+j*scale, scale, scale);
+        }
+    }
+}
+
+void display_pixel2(ssd1306_t *p, uint32_t x, uint32_t y) {
+    if(x>=p->width || y>=p->height) return;
+
+   p->buffer[x+p->width*(y>>3)]=0; // y>>3==y/8 && y&0x7==y%8
+}
+
+void display_string_test(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, char *s) {
+    const uint8_t *font = font_8x5;
+    for(int32_t x_n=x; *s; x_n+=8*scale) {
+        display_char_font2(p, x_n, y, scale, font, *(s++));
+    }
+}
+
 void display_string(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, char *s) {
     const uint8_t *font = font_8x5;
-    for(int32_t x_n=x; *s; x_n+=font[0]*scale) {
+    for(int32_t x_n=x; *s; x_n+=8*scale) {
         display_char_font(p, x_n, y, scale, font, *(s++));
+    }
+}
+
+void display_write_tight(ssd1306_t *p, uint32_t x, uint32_t y, int32_t scale, char *s) {
+    const uint8_t *font = font_8x5;
+    for(int32_t x_n=x; *s; x_n+=font[0]*1-scale) {
+        display_char_font(p, x_n, y, 1, font, *(s++));
     }
 }
 
@@ -363,7 +336,7 @@ static inline uint32_t ssd1306_bmp_get_val(const uint8_t *data, const size_t off
 }
 
 void ssd1306_bmp_show_image_with_offset(ssd1306_t *p, const uint8_t *data, const long size, uint32_t x_offset, uint32_t y_offset) {
-    if(size<54) 
+    if(size<54) // data smaller than header
         return;
 
     const uint32_t bfOffBits=ssd1306_bmp_get_val(data, 10, 4);
@@ -373,10 +346,10 @@ void ssd1306_bmp_show_image_with_offset(ssd1306_t *p, const uint8_t *data, const
     const uint16_t biBitCount=(uint16_t) ssd1306_bmp_get_val(data, 28, 2);
     const uint32_t biCompression=ssd1306_bmp_get_val(data, 30, 4);
 
-    if(biBitCount!=1) 
+    if(biBitCount!=1) // image not monochrome
         return;
 
-    if(biCompression!=0) 
+    if(biCompression!=0) // image compressed
         return;
 
     const int table_start=14+biSize;
@@ -421,4 +394,139 @@ void ssd1306_show(ssd1306_t *p) {
         display_write(p, payload[i]);
 
     *(p->buffer-1)=0x40;
+
+    private_write(p->i2c_i, p->address, p->buffer-1, p->bufsize+1, "ssd1306_show");
+}
+
+
+void draw_selector(ssd1306_t *disp, int16_t x,int16_t y,int16_t space){
+    display_string(disp,x-2,y,2, left_bracket);
+    display_string(disp,x-2+space,y,2, right_bracket); 
+}
+
+//MUSICAL NOTES
+void draw_4_note(ssd1306_t *disp, int16_t x,int16_t y){
+        display_fill_circle(disp,x,y,2);
+        display_line(disp,x+2,y-7,x+2,y-2);
+    }
+void draw_down_4_note(ssd1306_t *disp, int16_t x,int16_t y){
+        display_fill_circle(disp,x,y,2);
+        display_line(disp, x-2, y+1, x-2 , y+9);
+    }
+void draw_8_note(ssd1306_t *disp, int16_t x,int16_t y){
+        draw_4_note(disp,x,y);
+        display_line(disp,x+2,y-8,x+4,y-6);
+}
+
+void draw_down_8_note(ssd1306_t *disp, int16_t x,int16_t y){
+        draw_down_4_note(disp, x, y);
+        display_line(disp,x-5,y+8,x-2,y+10);
+}
+
+void draw_16_note(ssd1306_t *disp, int16_t x,int16_t y){
+        draw_8_note(disp,x,y);
+        display_line(disp,x+2,y-5,x+4,y-3);
+}
+
+void draw_32_note(ssd1306_t *disp, int16_t x,int16_t y){
+        draw_8_note(disp,x,y);
+        display_line(disp,x+2,y-2,x+4,y-1);
+}
+
+void draw_down_16_note(ssd1306_t *disp, int16_t x,int16_t y){
+        draw_down_8_note(disp,x,y);
+        display_line(disp,x-5,y+5,x-2,y+7);
+}
+void draw_seminote(ssd1306_t *disp, int16_t x,int16_t y){
+        display_circle(disp,x,y,2);
+        display_line(disp,x+2,y-7,x+2,y-2);
+    }
+void draw_down_seminote(ssd1306_t *disp, int16_t x,int16_t y){
+        display_circle(disp,x,y,2);
+        display_line(disp, x-2, y+1, x-2 , y+9);
+    }
+void draw_wholenote(ssd1306_t *disp, int16_t x,int16_t y){
+        display_circle(disp,x,y,2);
+}
+void draw_dotted(ssd1306_t *disp, int16_t x,int16_t y){
+    display_fill_circle(disp, x+5, y+1,1);
+}
+
+void draw_up_octave(ssd1306_t *disp, int16_t x,int16_t y, uint8_t amount){
+    for(uint8_t i = 0; i < amount;i++){
+    display_string(disp,x-3,y-12-4*i,1,up_arrow);
+    }
+}
+
+void draw_raised(ssd1306_t *disp, int16_t x,int16_t y){
+
+    display_string(disp,x,y,1,raised_symbol);
+}
+
+void draw_lowered(ssd1306_t *disp, int16_t x,int16_t y){
+
+    display_string(disp,x,y,1,lowered_symbol);
+}
+
+
+
+//RESTS
+
+void draw_wholerest(ssd1306_t *disp, int16_t x){
+    uint8_t y= 33;
+    display_line(disp,x-2,y-1,x+8,y-1);
+
+        display_square(disp,x,y,7,4);
+}
+
+void draw_semirest(ssd1306_t *disp, int16_t x){
+    uint8_t y= 32;
+        display_line(disp,x-2,y+4,x+8,y+4);
+        display_square(disp,x,y,7,4);
+}
+
+void draw_4_rest(ssd1306_t *disp, int16_t x){
+        display_string(disp,x,27,1,quarterrest1);
+        display_string(disp,x,27+8,1,quarterrest2);
+}
+
+void draw_8_rest(ssd1306_t *disp, int16_t x){
+        display_string(disp,x,31,1,eightrest);
+}
+
+void draw_16_rest(ssd1306_t *disp, int16_t x){
+        display_string(disp,x,31,1,sixteenthrest);
+}
+
+
+void draw_logo(ssd1306_t *disp){
+            for (uint8_t i = 0; i < 14; i++)
+        {    
+            ssd1306_clear(disp);
+                display_write_tight(disp,15-13+i,0+i*2-10,-10+i,logo_row1);
+                display_write_tight(disp,15-26+2*i,21+i-10,-10+i,logo_row2);
+                display_write_tight(disp,15-6+i/2,48-i/2-10,-10+i,logo_row3);
+                display_write_tight(disp,15-13+i,63-i-10,-10+i,logo_row4);
+                display_write_tight(disp,15,63-i-2,-10+i,logo_row5);
+            ssd1306_show(disp);
+            sleep_ms(40-i);
+        }
+        sleep_ms(50);
+        char bird[]={"bird electronics"};
+        char gen[]={"GENERATIVE"};
+        char en[]={"ENGINE"};
+        char ver[]={"version 0.1"};
+        display_write_tight(disp,5,0,1,gen);
+                 ssd1306_show(disp);
+        sleep_ms(400);
+        display_write_tight(disp,78,6,1,en);
+                 ssd1306_show(disp);
+        sleep_ms(200);
+  display_write_tight(disp,65,47,3,ver);
+                 ssd1306_show(disp);
+        sleep_ms(600);
+        
+        display_write_tight(disp,10,57,1,bird);
+                     ssd1306_show(disp);
+                 sleep_ms(500);
 }

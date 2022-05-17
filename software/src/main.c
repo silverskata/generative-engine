@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "hardware/timer.h"
-#include "include/controller.h"
+#include "../include/controller.h"
 
 
 
