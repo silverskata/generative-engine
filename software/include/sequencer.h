@@ -18,6 +18,7 @@
 #define REMAIN_NOTE 2
 #define REST_NOTE 3
 #define NOTE_STACCATO 4
+#define NEXT_NOTE 5
 
 typedef struct
 {
@@ -30,7 +31,7 @@ typedef struct
     uint8_t lowest_octave;
     uint8_t time_signature[2];
     int8_t modulation;
-    uint16_t last_note;
+    uint16_t last_step;
     bool active;
 } sequence_t;
 
@@ -38,7 +39,7 @@ typedef struct
 {
     sequence_t sequencers[SEQUENCER_AMOUNT];
     bool playing;
-    bool legato;
+    uint16_t end_of_sequence;
     uint16_t current_step;
     key current_key;
     int8_t key_select;
@@ -129,6 +130,6 @@ void edit_step_type(sequence_t * self, uint8_t type);
 
 void set_rest_step(sequence_t * self, uint8_t length);
 
-void add_note(sequence_t *self, note note);
+void add_note(sequencer_t *self, note note);
 
 void keyboard_step_value(note *self, int16_t value);

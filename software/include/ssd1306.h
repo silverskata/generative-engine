@@ -278,6 +278,8 @@ void draw_down_4_note(ssd1306_t *disp, int16_t x,int16_t y);
 
 void draw_down_16_note(ssd1306_t *disp, int16_t x,int16_t y);
 
+void draw_down_32_note(ssd1306_t *disp, int16_t x,int16_t y);
+
 void draw_dotted(ssd1306_t *disp, int16_t x,int16_t y);
 
 void draw_logo(ssd1306_t *disp);

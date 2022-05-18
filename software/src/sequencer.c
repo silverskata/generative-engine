@@ -14,17 +14,18 @@ void init_sequencer(sequencer_t *self, sequence_t * s1,sequence_t * s2, repeatin
     self->timer = timer;
 
     for(uint8_t k = 0; k<SEQUENCER_AMOUNT;k++){
-        self->sequencers[k].current_page = 0;
-        self->sequencers[k].selected_step = 0;
-        self->sequencers[k].active = true;
-        self->sequencers[k].lowest_octave = 255;
+
         for(uint16_t j=0;j<PAGESIZE;j++){
             for(uint16_t i = 0; i < STEPSIZE*MAX_NOTE_LENGTH;i++){
                 self->sequencers[k].note_value[j][i].type = NO_NOTE;
                 self->sequencers[k].note_value[j][i].length = NO_NOTE;
             }
         }
-
+        self->sequencers[k].note_value[0][0].type = NEXT_NOTE;
+        self->sequencers[k].current_page = 0;
+        self->sequencers[k].selected_step = 0;
+        self->sequencers[k].active = true;
+        self->sequencers[k].lowest_octave = 255;
     }
     self->sequencers[0].CV_CHANNEL = DAC_PITCH3;
     self->sequencers[0].GATE_CHANNEL = GATE3;
@@ -32,9 +33,9 @@ void init_sequencer(sequencer_t *self, sequence_t * s1,sequence_t * s2, repeatin
     self->sequencers[1].GATE_CHANNEL = GATE1;
     self->current_key = keys[KEY_C];
     self->playing = false;
-    self->legato = false;
     self->current_step = 0;
     self->current_scale = scales[IONIAN];
+    self->end_of_sequence = MAX_NOTE_LENGTH;
     self->key_select = 5;
     self->scale_select = 0;
     self->active_sequence = 0;
@@ -106,10 +107,6 @@ void stop_sequence(sequencer_t *self){
     self->current_step = 0;
 }
 
-void set_current_step(sequencer_t *self,uint16_t step){
-    self->current_step = step;
-}
-
 void sequencer_pause_play(sequencer_t *self){
     self->playing = !self->playing;
     if(!self->playing){
@@ -145,15 +142,16 @@ void select_scale(sequencer_t *self, int8_t dir){
     self->current_scale = scales[self->scale_select];
 }
 
-void add_note(sequence_t *self, note note){
-     set_note(self, self->selected_step, note);
-     self->last_note = self->selected_step;
-     select_step(self, 1);
+void add_note(sequencer_t *self, note note){
+    set_note(&self->sequencers[self->active_sequence], self->sequencers[self->active_sequence].selected_step, note);
+    step_forward(self);
 }
 
 void set_note(sequence_t *self, uint16_t step, note value)
 {
     int8_t replace = self->note_value[self->current_page][step].length - value.length;  
+    bool next =false;
+    if(self->note_value[self->current_page][step].type == NEXT_NOTE) next = true;
     if(value.octave * 7 + value.value < self->lowest_octave ) self->lowest_octave = value.octave;
     self->note_value[self->current_page][step] = value;
     int8_t diff = value.length - value.legato;
@@ -166,6 +164,10 @@ void set_note(sequence_t *self, uint16_t step, note value)
     else {
         for (uint8_t i = 1; i < value.length ; i++)
         self->note_value[self->current_page][step + i].type = NOTE_STACCATO;
+    }
+    if(next){
+            self->note_value[self->current_page][step + value.length].type = NEXT_NOTE;
+        return;
     }
     if(replace==0) return;
     else if( replace > 0){
@@ -203,8 +205,11 @@ void select_step(sequence_t *self, int8_t direction)
     {
         stepcheck = 1;
         while (self->note_value[self->current_page][self->selected_step + stepcheck].type == REMAIN_NOTE || 
-                self->note_value[self->current_page][self->selected_step + stepcheck].type == NOTE_STACCATO)
+                self->note_value[self->current_page][self->selected_step + stepcheck].type == NOTE_STACCATO){
+                    if(self->note_value[self->current_page][self->selected_step + stepcheck].type == NEXT_NOTE)
+                        break;
             stepcheck++;
+            }
         self->selected_step = self->selected_step + stepcheck;
     }
     else if (direction < 0)
@@ -218,6 +223,7 @@ void select_step(sequence_t *self, int8_t direction)
 }
 
 void step_forward(sequencer_t * self){
+    if(self->sequencers[self->active_sequence].note_value[self->sequencers[self->active_sequence].current_page][self->sequencers[self->active_sequence].selected_step].type != NEXT_NOTE)
     select_step(&self->sequencers[self->active_sequence],1);
 }
 
@@ -320,13 +326,14 @@ void set_tempo(sequencer_t *self, int16_t set)
 }
 
  scale_modulation scale_modulation_identifier[] = {
-    {"Cbb", "Cb", "C", "C#", "C##"},
-    {"Dbb", "Db", "D", "D#", "D##"},
-    {"Ebb", "Eb", "E", "E#", "E##"},
-    {"Fbb", "Fb", "F", "F#", "F##"},
-    {"Gbb", "Gb", "G", "G#", "G##"},
-    {"Abb", "Ab", "A", "A#", "A##"},
-    {"Bbb", "Bb", "B", "B#", "B##"}};
+    {"C$$", "C$", "C", "C#", "C##"},
+    {"D$$", "D$", "D", "D#", "D##"},
+    {"E$$", "E$", "E", "E#", "E##"},
+    {"F$$", "F$", "F", "F#", "F##"},
+    {"G$$", "G$", "G", "G#", "G##"},
+    {"A$$", "A$", "A", "A#", "A#"},
+    {"B$$", "B$", "B", "B#", "B##"}
+    };
 
 char * note_to_string(sequencer_t *seq, uint16_t note_step){
     uint8_t val = seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][note_step].value;

@@ -71,13 +71,9 @@ uint8_t staccato = 1;
 void update_state_edit(controller_t * self, uint16_t button_press, int16_t keyboard_press, int8_t encoder_direction){
 
     int8_t selection_direction = 0;
-    uint8_t note_length = QUARTERNOTE;
-    uint8_t octave = 1;
-    uint8_t legato = note_length -1;
     if(button_press!=0 && !is_input(button_press)){
         switch(button_press>>1){
             case BUTTON_LEFT: 
-            //SHIFT LEFT BUTTON ACTS AS A BACK BUTTON, WILL BE ADDED IN NEXT ITERATION OF THE HARDWARE
                 if(self->sequencer->sequencers[self->sequencer->active_sequence].selected_step >0)
                     step_reverse(self->sequencer);
                 break;
@@ -137,19 +133,20 @@ void update_state_edit(controller_t * self, uint16_t button_press, int16_t keybo
             break;
             case 10:
                 set_rest_step(&self->sequencer->sequencers[self->sequencer->active_sequence],self->note.length);
+                step_forward(self->sequencer);
             break;
             case 12:
                 self->note.octave ++;
                 keyboard_press = 0;
             default:
                 if(self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
-                    [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=NO_NOTE){
+                    [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=NEXT_NOTE){
                     keyboard_step_value(&self->note,keyboard_press);
                     set_note(&self->sequencer->sequencers[self->sequencer->active_sequence],self->sequencer->sequencers[self->sequencer->active_sequence].selected_step,self->note);
                 }
                 else{ 
                     keyboard_step_value(&self->note,keyboard_press);
-                    add_note(&self->sequencer->sequencers[self->sequencer->active_sequence], self->note);
+                    add_note(self->sequencer, self->note);
                 }
         }
     }
@@ -158,7 +155,7 @@ void update_state_edit(controller_t * self, uint16_t button_press, int16_t keybo
         {   
             self->selection_state += selection_direction;
             if(self->selection_state>9) self->selection_state = 0;
-            else if(self->selection_state<0) self->selection_state = 10;
+            else if(self->selection_state<0) self->selection_state = 9;
             self->note.length=note_length_map[self->selection_state];
             self->note.legato = self->note.length - staccato;
         }
@@ -310,6 +307,6 @@ void update_state_save(controller_t * self, uint16_t button_press){
 
 void go_to_edit(controller_t * self){
     self->menu_state = EDIT_MENU; //EDIT NOTES MENU
-    self->selection_state = 3;
+    self->selection_state = 5;
     self->keyboard_active = 3;
 }

@@ -429,10 +429,13 @@ void draw_16_note(ssd1306_t *disp, int16_t x,int16_t y){
 }
 
 void draw_32_note(ssd1306_t *disp, int16_t x,int16_t y){
-        draw_8_note(disp,x,y);
+        draw_16_note(disp,x,y);
         display_line(disp,x+2,y-2,x+4,y-1);
 }
-
+void draw_down_32_note(ssd1306_t *disp, int16_t x,int16_t y){
+        draw_down_16_note(disp,x,y);
+        display_line(disp,x-5,y+2,x-2,y+4);
+}
 void draw_down_16_note(ssd1306_t *disp, int16_t x,int16_t y){
         draw_down_8_note(disp,x,y);
         display_line(disp,x-5,y+5,x-2,y+7);

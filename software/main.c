@@ -11,28 +11,6 @@ controller_t controller ={
     .selection_state = 0,
 };
 
-/*  // DEBUG PURPOSES
-ssd1306_t disp; 
-void setup_ui()
-{
-    disp.external_vcc = false;
-    display_setup(i2c0);
-    display_init(&disp, 128, 64, 0x3C, i2c0);
-}
-  */
-
-
-// TEST STUFF
-char buf[30];
-char buf2[30];
-char buf3[30];
-int16_t count = 0;
-bool display_updated = false;
-note temp;
-
-
-bool UI_refresh = true;
-
 void input_core();
 bool repeating_timer_callback(struct repeating_timer *t);
 int64_t UI_refresh_callback(alarm_id_t id, void * user_data);
@@ -42,6 +20,8 @@ sequence_t s2;
 
 int main()
 {
+
+    //SETUP
     set_sys_clock_khz(100 * 1000, true);
     struct repeating_timer timer;
     sleep_ms(500);
@@ -54,72 +34,20 @@ int main()
     init_sequencer(&sequencer, &s1, &s2, &timer);
     sleep_ms(100);
     setup_ui();
-    
     UI_startup();
-
     sequencer.playing = false;
     add_repeating_timer_us(-62500, repeating_timer_callback, NULL, &timer);
     multicore_launch_core1(input_core);
 
-
-
-//DEBUG
-
-/*      ssd1306_t disp;
-    disp.external_vcc=false;
-    display_setup(i2c0);
-    display_init(&disp, 128, 64, 0x3C, i2c0); 
-    */
-
-//DEBUG
-    note test;
-    test.type =REGULAR_NOTE;
-    test.length = 4;
-    test.legato = 3;
-    test.octave = 1;
-
-    sleep_ms(500);
-    for(int j =0;j<16;j++){
-    for (int i = 0; i < 8; i++)
-    {
-        if(i!=7){
-        test.value = i;
-        set_note(&sequencer.sequencers[0], sequencer.sequencers[0].selected_step, test); // 1 C
-        select_step(&sequencer.sequencers[0], 1);
-        }
-        else{
-        test.value = 0;
-        test.octave ++;
-        set_note(&sequencer.sequencers[0], sequencer.sequencers[0].selected_step, test); // 1 C
-        select_step(&sequencer.sequencers[0], 1);
-        test.octave --;
-        }
-    }
-    }
-    sequencer.sequencers[0].selected_step = 0;
-
-   sequencer.active_sequence = 0;
-
-
-    sequencer.sequencers[1].active = false;
-//DEBUG
-    char buff[30];
-    char buff2[30];
-    char buff3[30];
-    char yes[] ={" pressed "};
-    char no[] = {" pressed "};
-    uint16_t a;
-    uint16_t b;
-    int c = 0;
-    sleep_ms(200);
-    flash_led(6,500);
-     controller.keyboard_active = 3;
+//CONTROLLER
+    controller.keyboard_active = 3;
     uint16_t button_press = 0;
     int16_t  keyboard_press = -1;
     int8_t encoder_direction = 0;
     sequencer.current_scale = scales[IONIAN];
+    flash_led(6,500);
+
     uint64_t time = time_us_64();
-//DEBUG
     while (1)
     {       
 
@@ -164,33 +92,6 @@ int main()
                     update_state_generation(&controller, button_press, encoder_direction);
 
             } 
-                
-        
-           //BUTTONS DEBUG
-          //   ssd1306_clear(&disp);
-      /*       if(!queue_is_empty(&buttons.keyboardqueue))
-            queue_remove_blocking(&buttons.keyboardqueue, &a);
-            if(!queue_is_empty(&buttons.controlqueue))
-            queue_remove_blocking(&buttons.controlqueue, &b);
-            if (multicore_fifo_rvalid())
-              c+=  multicore_fifo_pop_blocking();
-            sprintf(buff,"%x %x %d",a,b,c);
-            
-            
-            display_string(&disp,0,10,1,buff);
-            sprintf(buff2,"%d%d",buttons.keyboard_buttons[0],buttons.keyboard_buttons[1]);
-            sprintf(buff3,"%d %d %d %d %d %d",buttons.control_buttons[0],buttons.control_buttons[1],buttons.control_buttons[2],buttons.control_buttons[3],buttons.control_buttons[4],buttons.control_buttons[5]);
-            display_write_tight(&disp,0,20,2,buff2);
-            display_string(&disp,0,30,1,buff3);
-            if(!(a & 1))
-                display_string(&disp,0,40,1,no);
-            else
-                display_write_tight(&disp,0,40,2,yes);
-                ssd1306_show(&disp);   */
-       // }
- 
-
-
     }
 }
 bool repeating_timer_callback(struct repeating_timer *t)
@@ -198,8 +99,8 @@ bool repeating_timer_callback(struct repeating_timer *t)
     if (sequencer.playing)
     {
         play_step(&sequencer);
-        set_current_step(&sequencer, sequencer.current_step + 1);
-        if (sequencer.current_step >= MAX_NOTE_LENGTH * STEPSIZE)
+        sequencer.current_step++;
+        if (sequencer.current_step == sequencer.end_of_sequence)
             sequencer.current_step = 0;
     }
     return true;

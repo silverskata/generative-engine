@@ -60,19 +60,47 @@ void UI_main_menu(sequencer_t * seq, uint8_t menu_state, int8_t selection_state,
 
 void edit_menu(sequencer_t *seq, uint8_t current_bar, note *control_note){
     char bar_buf[3];
-    sprintf(bar_buf,"%d",current_bar);
+    sprintf(bar_buf,"%d",current_bar + 1);
     display_write_tight(&disp, 0,16,2,bar_buf); //CURRENT BAR
-    char octave_buf[3];
-    sprintf(octave_buf,"%d",seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page]->octave);
-
-    //////DEBUG
-        char test_buf[8];
-    sprintf(test_buf,"%d %d %d",control_note->length,control_note->legato,control_note->octave);
-   display_write_tight(&disp,12,0,2, test_buf); 
-    //////DEBUG
-
-   display_write_tight(&disp,111,0,2, note_to_string(seq,seq->sequencers[seq->active_sequence].selected_step)); //KEY LOCATION
-   display_write_tight(&disp,123,0,2, octave_buf);
+    char octave_buf[5];
+    sprintf(octave_buf,"%d",seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][seq->sequencers[seq->active_sequence].selected_step].octave);
+    display_write_tight(&disp,111,0,2, note_to_string(seq,seq->sequencers[seq->active_sequence].selected_step)); //KEY LOCATION
+    display_write_tight(&disp,123,0,2, octave_buf);
+    char note_buf[8];
+    sprintf(note_buf,"legato %d  octave %d",control_note->legato,control_note->octave);
+    display_write_tight(&disp,10,55,3, note_buf); 
+    char note_word[]="note length:";
+    display_write_tight(&disp,5,3,3, note_word); 
+    uint8_t x = 83;
+    switch (control_note->length)
+    {
+    case WHOLENOTE:
+        draw_wholenote(&disp, x,10);
+        break;
+    case DOTTEDSEMI:
+        draw_dotted(&disp, x,10);
+    case SEMINOTE:
+        draw_seminote(&disp, x,10);
+        break;
+    case DOTTEDQUARTER:
+        draw_dotted(&disp,x,10);
+    case QUARTERNOTE:
+        draw_4_note(&disp, x,10);
+        break;
+    case DOTTEDEIGHT:
+        draw_dotted(&disp, x,10);
+    case EIGHTNOTE:
+        draw_8_note(&disp, x,10);
+        break;
+    case DOTTEDSIXTEENTH:
+        draw_dotted(&disp, x,10);
+    case SIXTEENTHNOTE:
+        draw_16_note(&disp, x,10);
+        break;
+    case THIRTYSECONDNOTE:
+        draw_32_note(&disp, x,10);
+        break;        
+    }
 }
 
 void main_menu(sequencer_t * seq){
@@ -213,16 +241,14 @@ void UI_draw_bar(sequencer_t * seq, uint8_t current_bar, int16_t current_step, u
                     break;
             }
         }
-        else if(seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar*32 +i].type == NO_NOTE && menu_state ==4){
-                display_circle(&disp,12+7*current_step/2,33,4);
-                if(blink_helper>450)
-                display_fill_circle(&disp,12+7*current_step/2,33,2);
-                blink_helper ++;
-                if (blink_helper>700) blink_helper = 0;
-        }
-        
+            else if(seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar*32 +i].type == NEXT_NOTE && menu_state ==4){
+                    display_circle(&disp,x,33,4);
+                    if(blink_helper>450)
+                    display_fill_circle(&disp,x,33,2);
+                    blink_helper ++;
+                    if (blink_helper>700) blink_helper = 0;
+            }
        }
-
 }
 
 void UI_draw_sheet(){
