@@ -1,7 +1,47 @@
 #include "../include/controller.h"
 
+    uint16_t button_press = 0;
+    int16_t  keyboard_press = -1;
+    int8_t encoder_direction = 0;
 
-void init_controller(controller_t * control,button_control_t  *buttons ,sequencer_t *seq){
+void control_task(controller_t * controller){
+    if(!queue_is_empty(&controller->buttons->controlqueue)){
+                button_press = read_control_queue(controller);
+                if(!update_shift(controller, button_press));
+            }
+            else button_press = 0;
+            if(controller->keyboard_active == 3 && !queue_is_empty(&controller->buttons->keyboardqueue)){
+                keyboard_press = read_keyboard_queue(controller);
+                    if(is_input(keyboard_press))
+                       keyboard_press = keyboard_press >> 1; /***TODO FIX FOR PLAYING THE KEYBOARD ***/
+                    else keyboard_press = -1;
+            }
+            else keyboard_press = -1;
+        if (multicore_fifo_rvalid())
+              encoder_direction = multicore_fifo_pop_blocking();
+            else encoder_direction =0;
+
+            switch(controller->menu_state){
+                case MAIN_PLAYING:
+                    update_state_playing(controller, button_press,keyboard_press, encoder_direction);
+                break;
+                case MENU_CLOSED:
+                    update_state_main(controller, button_press,keyboard_press, encoder_direction);
+                break;
+                case MENU_OPEN:
+
+                break;
+                case EDIT_MENU:
+                    update_state_edit(controller, button_press, keyboard_press, encoder_direction);
+                break;
+                case GENERATE_MENU:
+                    update_state_generation(controller, button_press, encoder_direction);
+                break;
+            } 
+}
+
+
+void init_controller(controller_t* control,button_control_t  *buttons ,sequencer_t *seq){
     control->sequencer = seq;
     control->buttons = buttons;
     control->shift = false;
@@ -44,7 +84,7 @@ void set_keyboard(controller_t *self, uint8_t onoff){
 }
 void select_note_length(controller_t *self, int8_t direction){
     self->note.length +=direction;
-    if(self->note.length>32) self->note.length=32;
+    if(self->note.length>MAX_NOTE_LENGTH) self->note.length=MAX_NOTE_LENGTH;
     else if(self->note.length<1) self->note.length = 1;
 }
 
@@ -88,7 +128,7 @@ void update_state_edit(controller_t * self, uint16_t button_press, int16_t keybo
                 if(self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
                     [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=NO_NOTE && self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
                     [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=REST_NOTE && self->shift)
-                    edit_step_value(&self->sequencer->sequencers[self->sequencer->active_sequence] , 1);
+                    edit_step_value(self->sequencer , 1);
                 else if(self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
                     [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=REST_NOTE) {
                     self->note.octave ++;
@@ -100,7 +140,7 @@ void update_state_edit(controller_t * self, uint16_t button_press, int16_t keybo
                 if(self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
                     [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=NO_NOTE &&self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
                     [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=REST_NOTE && self->shift)
-                    edit_step_value(&self->sequencer->sequencers[self->sequencer->active_sequence] , -1);
+                    edit_step_value(self->sequencer , -1);
                 else if(self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
                     [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=REST_NOTE) {
                     self->note.octave --;
@@ -109,8 +149,8 @@ void update_state_edit(controller_t * self, uint16_t button_press, int16_t keybo
             break;
             case(BUTTON_OK):
                 if(self->shift) self->menu_state = MAIN_PLAYING;
-                else
-                    set_note(&self->sequencer->sequencers[self->sequencer->active_sequence],self->sequencer->sequencers[self->sequencer->active_sequence].selected_step,self->note);
+                else; //*** TODO ***//
+                   
             break;
         }
     }
@@ -132,17 +172,28 @@ void update_state_edit(controller_t * self, uint16_t button_press, int16_t keybo
             if(self->note.legato>self->note.length)self->note.legato=self->note.length;
             break;
             case 10:
-                set_rest_step(&self->sequencer->sequencers[self->sequencer->active_sequence],self->note.length);
+                set_rest_step(self->sequencer, self->note.length);
                 step_forward(self->sequencer);
             break;
             case 12:
                 self->note.octave ++;
                 keyboard_press = 0;
+                if(self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
+                    [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=NEXT_NOTE){
+                    keyboard_step_value(&self->note,keyboard_press);
+                    set_note(self->sequencer,&self->sequencer->sequencers[self->sequencer->active_sequence],self->sequencer->sequencers[self->sequencer->active_sequence].selected_step,self->note);
+                }
+                else{ 
+                    keyboard_step_value(&self->note,keyboard_press);
+                    add_note(self->sequencer, self->note);
+                }
+                self->note.octave --;
+                break;
             default:
                 if(self->sequencer->sequencers[self->sequencer->active_sequence].note_value[self->sequencer->sequencers
                     [self->sequencer->active_sequence].current_page][self->sequencer->sequencers[self->sequencer->active_sequence].selected_step].type!=NEXT_NOTE){
                     keyboard_step_value(&self->note,keyboard_press);
-                    set_note(&self->sequencer->sequencers[self->sequencer->active_sequence],self->sequencer->sequencers[self->sequencer->active_sequence].selected_step,self->note);
+                    set_note(self->sequencer,&self->sequencer->sequencers[self->sequencer->active_sequence],self->sequencer->sequencers[self->sequencer->active_sequence].selected_step,self->note);
                 }
                 else{ 
                     keyboard_step_value(&self->note,keyboard_press);

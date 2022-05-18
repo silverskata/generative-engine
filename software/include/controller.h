@@ -25,6 +25,8 @@ bool shift;
 note note;
 }controller_t;
 
+void control_task(controller_t * controller);
+
 void init_controller(controller_t * control,button_control_t  *buttons ,sequencer_t *seq);
 
 uint16_t read_control_queue(controller_t * self);

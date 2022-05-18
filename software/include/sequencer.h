@@ -52,7 +52,7 @@ typedef struct
 
 void init_sequencer(sequencer_t *self, sequence_t * s1,sequence_t * s2, repeating_timer_t *timer);
 
-void set_note(sequence_t *self, uint16_t step, note value);
+void set_note(sequencer_t *seq, sequence_t *self, uint16_t step, note value);
 
 void select_step(sequence_t *self, int8_t direction);
 
@@ -120,15 +120,12 @@ void step_forward(sequencer_t * self);
 
 // EDIT
 
-void edit_step_legato(sequence_t *self,uint8_t legato);
 
-void edit_step_length(sequence_t *self,uint8_t length);
-
-void edit_step_value(sequence_t *self, int8_t value);
+void edit_step_value(sequencer_t *self, int8_t value);
 
 void edit_step_type(sequence_t * self, uint8_t type);
 
-void set_rest_step(sequence_t * self, uint8_t length);
+void set_rest_step(sequencer_t * self, uint8_t length);
 
 void add_note(sequencer_t *self, note note);
 

@@ -143,11 +143,11 @@ void select_scale(sequencer_t *self, int8_t dir){
 }
 
 void add_note(sequencer_t *self, note note){
-    set_note(&self->sequencers[self->active_sequence], self->sequencers[self->active_sequence].selected_step, note);
+    set_note(self,&self->sequencers[self->active_sequence], self->sequencers[self->active_sequence].selected_step, note);
     step_forward(self);
 }
 
-void set_note(sequence_t *self, uint16_t step, note value)
+void set_note(sequencer_t *seq, sequence_t *self, uint16_t step, note value)
 {
     int8_t replace = self->note_value[self->current_page][step].length - value.length;  
     bool next =false;
@@ -167,6 +167,9 @@ void set_note(sequence_t *self, uint16_t step, note value)
     }
     if(next){
             self->note_value[self->current_page][step + value.length].type = NEXT_NOTE;
+            self->last_step = step + value.length;
+            while(step + value.length > seq->end_of_sequence)
+                seq->end_of_sequence+=MAX_NOTE_LENGTH;
         return;
     }
     if(replace==0) return;
@@ -178,7 +181,7 @@ void set_note(sequence_t *self, uint16_t step, note value)
         .octave = 5,
         .value = 0,
     };
-        set_note(self,step + value.length, rest);
+        set_note(seq, self,step + value.length, rest);
     }
     else{
     uint8_t stepcheck = 0;
@@ -194,7 +197,7 @@ void set_note(sequence_t *self, uint16_t step, note value)
         .value = 0,
     };
     if(stepcheck>0)
-    set_note(self,step + value.length, rest);
+    set_note(seq, self,step + value.length, rest);
     }
     
 }
@@ -225,6 +228,7 @@ void select_step(sequence_t *self, int8_t direction)
 void step_forward(sequencer_t * self){
     if(self->sequencers[self->active_sequence].note_value[self->sequencers[self->active_sequence].current_page][self->sequencers[self->active_sequence].selected_step].type != NEXT_NOTE)
     select_step(&self->sequencers[self->active_sequence],1);
+    
 }
 
 void step_reverse(sequencer_t * self){
@@ -241,7 +245,7 @@ void keyboard_step_value(note *self, int16_t value){
 void edit_step_type(sequence_t * self, uint8_t type){
     self->note_value[self->current_page][self->selected_step].type = type;
 }
-void set_rest_step(sequence_t * self, uint8_t length){
+void set_rest_step(sequencer_t * self, uint8_t length){
     note rest = {
         .legato = 0,
         .length = length,
@@ -249,47 +253,34 @@ void set_rest_step(sequence_t * self, uint8_t length){
         .octave = 5,
         .value = 0,
     };
-    set_note(self, self->selected_step,rest);
+    set_note(self, &self->sequencers[self->active_sequence], self->sequencers[self->active_sequence].selected_step,rest);
 }
 
-void edit_step_value(sequence_t *self, int8_t value)
+void edit_step_value(sequencer_t *self, int8_t value)
 {
-    self->note_value[self->current_page][self->selected_step].value += value;
-    if(self->note_value[self->current_page][self->selected_step].octave >= 5 && self->note_value[self->current_page][self->selected_step].value > 0){
-        self->note_value[self->current_page][self->selected_step].octave = 5;
-        self->note_value[self->current_page][self->selected_step].value = 0;
+  note *note_p = &self->sequencers[self->active_sequence].note_value[self->sequencers[self->active_sequence].current_page][self->sequencers[self->active_sequence].selected_step];
+     note_p->value += value;
+    if(note_p->octave >= 5 && note_p->value > 0){
+        note_p->octave = 5;
+        note_p->value = 0;
         }
-    else if(self->note_value[self->current_page][self->selected_step].value > 6){
-        self->note_value[self->current_page][self->selected_step].value = 0;
-        self->note_value[self->current_page][self->selected_step].octave ++;
+    else if(note_p->value > 6){
+        note_p->value = 0;
+        note_p->octave ++;
     }
-    else if(self->note_value[self->current_page][self->selected_step].value < 0){
-        self->note_value[self->current_page][self->selected_step].value = 6;
-        self->note_value[self->current_page][self->selected_step].octave --;
-        if(self->note_value[self->current_page][self->selected_step].octave < 0) {
-        self->note_value[self->current_page][self->selected_step].octave = 0;
-        self->note_value[self->current_page][self->selected_step].value = 0;
+    else if(note_p->value < 0){
+        note_p->value = 6;
+        note_p->octave --;
+        if(note_p->octave < 0) {
+        note_p->octave = 0;
+        note_p->value = 0;
         }
     }
-    if(self->note_value[self->current_page][self->selected_step].type = REST_NOTE){ 
-        self->note_value[self->current_page][self->selected_step].type = REGULAR_NOTE;
-        self->note_value[self->current_page][self->selected_step].legato = self->note_value[self->current_page][self->selected_step].length -1;
-        set_note(self,self->selected_step,self->note_value[self->current_page][self->selected_step]);
-    }
-}
-
-void edit_step_length(sequence_t *self,uint8_t length){
-    if(self->note_value[self->current_page]->length != length){
-        self->note_value[self->current_page][self->selected_step].length = length;
-        set_note(self, self->selected_step, self->note_value[self->current_page][self->selected_step]);
-    }
-}
-
-void edit_step_legato(sequence_t *self,uint8_t legato){
-    if(self->note_value[self->current_page]->legato != legato){
-        self->note_value[self->current_page][self->selected_step].legato = legato;
-        set_note(self, self->selected_step, self->note_value[self->current_page][self->selected_step]);
-    }
+    if(note_p->type = REST_NOTE){ 
+        note_p->type = REGULAR_NOTE;
+        note_p->legato = note_p->length -1;
+        set_note(self,&self->sequencers[self->active_sequence],self->sequencers[self->active_sequence].selected_step,*note_p);
+    } 
 }
 
 

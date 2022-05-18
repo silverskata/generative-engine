@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "${workspaceFolder}/software"
+    "cmake.sourceDirectory": "${workspaceFolder}/software",
+    "files.associations": {
+        "type_traits": "c"
+    }
 }
