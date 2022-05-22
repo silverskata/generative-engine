@@ -8,4 +8,4 @@
 
 void output_setup();
 
-void flash_led(uint8_t times,uint32_t duration_ms);
+void flash_led(uint8_t times, uint32_t duration_ms);

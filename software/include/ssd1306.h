@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/** 
-* @file ssd1306.h
-* 
-* simple driver for ssd1306 displays
-*/
+/**
+ * @file ssd1306.h
+ *
+ * simple driver for ssd1306 displays
+ */
 
 #ifndef _inc_ssd1306
 #define _inc_ssd1306
@@ -34,63 +34,65 @@ SOFTWARE.
 #include <hardware/i2c.h>
 
 /**
-*	@brief defines commands used in ssd1306
-*/
-typedef enum {
-    SET_CONTRAST = 0x81,
-    SET_ENTIRE_ON = 0xA4,
-    SET_NORM_INV = 0xA6,
-    SET_DISP = 0xAE,
-    SET_MEM_ADDR = 0x20,
-    SET_COL_ADDR = 0x21,
-    SET_PAGE_ADDR = 0x22,
-    SET_DISP_START_LINE = 0x40,
-    SET_SEG_REMAP = 0xA0,
-    SET_MUX_RATIO = 0xA8,
-    SET_COM_OUT_DIR = 0xC0,
-    SET_DISP_OFFSET = 0xD3,
-    SET_COM_PIN_CFG = 0xDA,
-    SET_DISP_CLK_DIV = 0xD5,
-    SET_PRECHARGE = 0xD9,
-    SET_VCOM_DESEL = 0xDB,
-    SET_CHARGE_PUMP = 0x8D
+ *	@brief defines commands used in ssd1306
+ */
+typedef enum
+{
+	SET_CONTRAST = 0x81,
+	SET_ENTIRE_ON = 0xA4,
+	SET_NORM_INV = 0xA6,
+	SET_DISP = 0xAE,
+	SET_MEM_ADDR = 0x20,
+	SET_COL_ADDR = 0x21,
+	SET_PAGE_ADDR = 0x22,
+	SET_DISP_START_LINE = 0x40,
+	SET_SEG_REMAP = 0xA0,
+	SET_MUX_RATIO = 0xA8,
+	SET_COM_OUT_DIR = 0xC0,
+	SET_DISP_OFFSET = 0xD3,
+	SET_COM_PIN_CFG = 0xDA,
+	SET_DISP_CLK_DIV = 0xD5,
+	SET_PRECHARGE = 0xD9,
+	SET_VCOM_DESEL = 0xDB,
+	SET_CHARGE_PUMP = 0x8D
 } ssd1306_command_t;
 
 /**
-*	@brief holds the configuration
-*/
-typedef struct {
-    uint8_t width; 		/**< width of display */
-    uint8_t height; 	/**< height of display */
-    uint8_t pages;		/**< stores pages of display (calculated on initialization*/
-    uint8_t address; 	/**< i2c address of display*/
-    i2c_inst_t *i2c_i; 	/**< i2c connection instance */
-    bool external_vcc; 	/**< whether display uses external vcc */ 
-    uint8_t *buffer;	/**< display buffer */
-    size_t bufsize;		/**< buffer size */
+ *	@brief holds the configuration
+ */
+typedef struct
+{
+	uint8_t width;	   /**< width of display */
+	uint8_t height;	   /**< height of display */
+	uint8_t pages;	   /**< stores pages of display (calculated on initialization*/
+	uint8_t address;   /**< i2c address of display*/
+	i2c_inst_t *i2c_i; /**< i2c connection instance */
+	bool external_vcc; /**< whether display uses external vcc */
+	uint8_t *buffer;   /**< display buffer */
+	size_t bufsize;	   /**< buffer size */
 } ssd1306_t;
 
 /**
-*	@brief initialize display
-*
-*	@param[in] p : pointer to instance of ssd1306_t
-*	@param[in] width : width of display
-*	@param[in] height : heigth of display
-*	@param[in] address : i2c address of display
-*	@param[in] i2c_instance : instance of i2c connection
-*	
-* 	@return bool.
-*	@retval true for Success
-*	@retval false if initialization failed
-*/
+ *	@brief initialize display
+ *
+ *	@param[in] p : pointer to instance of ssd1306_t
+ *	@param[in] width : width of display
+ *	@param[in] height : heigth of display
+ *	@param[in] address : i2c address of display
+ *	@param[in] i2c_instance : instance of i2c connection
+ *
+ * 	@return bool.
+ *	@retval true for Success
+ *	@retval false if initialization failed
+ */
 bool display_init(ssd1306_t *p, uint16_t width, uint16_t height, uint8_t address, i2c_inst_t *i2c_instance);
 
 /**
-*	@brief turn off display
-*
-*	@param[in] p : instance of display
-*
-*/
+ *	@brief turn off display
+ *
+ *	@param[in] p : instance of display
+ *
+ */
 void ssd1306_poweroff(ssd1306_t *p);
 
 /**
@@ -208,8 +210,7 @@ void ssd1306_bmp_show_image(ssd1306_t *p, const uint8_t *data, const long size);
 	@param[in] c : character to draw
 */
 void display_char_font(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char c);
-	
-	
+
 /**
 	@brief write a string with selected spacing
 
@@ -231,7 +232,7 @@ void display_write_tight(ssd1306_t *p, uint32_t x, uint32_t y, int32_t scale, ch
 	@param[in] font : pointer to font
 	@param[in] s : text to draw
 */
-void ssd1306_draw_string_with_font(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char *s );
+void ssd1306_draw_string_with_font(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char *s);
 
 /**
 	@brief draw char with builtin font
@@ -248,19 +249,19 @@ void display_circle(ssd1306_t *p, uint8_t x0, uint8_t y0, uint8_t radius);
 
 void display_fill_circle(ssd1306_t *p, int8_t x0, int8_t y0, int8_t radius);
 
-void draw_wholenote(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_wholenote(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_seminote(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_seminote(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_down_seminote(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_down_seminote(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_4_note(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_4_note(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_8_note(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_8_note(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_16_note(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_16_note(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_32_note(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_32_note(ssd1306_t *disp, int16_t x, int16_t y);
 
 void draw_wholerest(ssd1306_t *disp, int16_t x);
 
@@ -272,15 +273,15 @@ void draw_8_rest(ssd1306_t *disp, int16_t x);
 
 void draw_16_rest(ssd1306_t *disp, int16_t x);
 
-void draw_down_8_note(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_down_8_note(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_down_4_note(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_down_4_note(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_down_16_note(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_down_16_note(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_down_32_note(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_down_32_note(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_dotted(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_dotted(ssd1306_t *disp, int16_t x, int16_t y);
 
 void draw_logo(ssd1306_t *disp);
 
@@ -288,7 +289,7 @@ void display_setup(i2c_inst_t *i2c);
 
 void display_pixel2(ssd1306_t *p, uint32_t x, uint32_t y);
 
-void draw_selector(ssd1306_t *disp, int16_t x,int16_t y,int16_t space);
+void draw_selector(ssd1306_t *disp, int16_t x, int16_t y, int16_t space);
 
 void display_black_square(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
@@ -296,9 +297,9 @@ void display_string_test(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t scale, c
 
 void display_box_no_top(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
-void draw_up_octave(ssd1306_t *disp, int16_t x,int16_t y, uint8_t amount);
+void draw_up_octave(ssd1306_t *disp, int16_t x, int16_t y, uint8_t amount);
 
-void draw_lowered(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_lowered(ssd1306_t *disp, int16_t x, int16_t y);
 
-void draw_raised(ssd1306_t *disp, int16_t x,int16_t y);
+void draw_raised(ssd1306_t *disp, int16_t x, int16_t y);
 #endif

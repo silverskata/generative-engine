@@ -1,4 +1,4 @@
-//BUTTONS
+// BUTTONS
 #define RIGHT 28
 #define LEFT 27
 #define UP 25

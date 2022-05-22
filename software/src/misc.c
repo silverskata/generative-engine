@@ -18,8 +18,9 @@ void output_setup()
     gpio_put(GATE3, GATE_OFF);
 }
 
-void flash_led(uint8_t times,uint32_t duration_ms){
-    uint8_t time = (duration_ms / times)/2;
+void flash_led(uint8_t times, uint32_t duration_ms)
+{
+    uint8_t time = (duration_ms / times) / 2;
     for (int i = 0; i < times; i++)
     {
         gpio_put(29, 1);

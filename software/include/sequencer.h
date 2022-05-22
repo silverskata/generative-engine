@@ -19,6 +19,9 @@
 #define REST_NOTE 3
 #define NOTE_STACCATO 4
 #define NEXT_NOTE 5
+#define KEYBOARD_OFF 0
+#define KEYBOARD_UNISON 1
+#define KEYBOARD_POLY 2
 
 typedef struct
 {
@@ -32,7 +35,13 @@ typedef struct
     uint8_t time_signature[2];
     int8_t modulation;
     uint16_t last_step;
+    bool dynamic_generation;
+    bool keyboard_playing;
+    int8_t harmonize;     //select which channel to harmonize with 0 for off
+    int8_t harmony;       //Select which interval to harmonize
+    uint16_t total_notes; //counting the number of REGULAR_NOTE for the generator
     bool active;
+    uint16_t regular_note_position[];
 } sequence_t;
 
 typedef struct
@@ -47,10 +56,12 @@ typedef struct
     int8_t active_sequence;
     int8_t scale_select;
     scale current_scale;
+    uint8_t keyboard_mode;
+    uint8_t keyboard_octave;
     repeating_timer_t *timer;
 } sequencer_t;
 
-void init_sequencer(sequencer_t *self, sequence_t * s1,sequence_t * s2, repeating_timer_t *timer);
+void init_sequencer(sequencer_t *self, sequence_t *s1, sequence_t *s2, repeating_timer_t *timer);
 
 void set_note(sequencer_t *seq, sequence_t *self, uint16_t step, note value);
 
@@ -58,7 +69,7 @@ void select_step(sequence_t *self, int8_t direction);
 
 void edit_step(sequence_t *self, uint16_t step, note note);
 
-uint8_t get_note_value(sequencer_t *self, uint16_t step,uint8_t sequence);
+uint8_t get_note_value(sequencer_t *self, uint16_t step, uint8_t sequence);
 
 uint8_t get_note_type(sequence_t *self, uint16_t step);
 
@@ -82,9 +93,9 @@ void select_key(sequencer_t *self, int8_t direction);
 
 void select_scale(sequencer_t *self, int8_t dir);
 
-void select_active_sequencer(sequencer_t * self, int8_t select);
+void select_active_sequencer(sequencer_t *self, int8_t select);
 
-void sequence_on_off(sequencer_t * self);
+void sequence_on_off(sequencer_t *self);
 
 void select_page(sequencer_t *self, int8_t direction);
 /**
@@ -94,7 +105,7 @@ void select_page(sequencer_t *self, int8_t direction);
  *
  * 	@return the name as a char array.
  */
-char * note_to_string(sequencer_t *seq, uint16_t note_step);
+char *note_to_string(sequencer_t *seq, uint16_t note_step);
 
 /**
  *	@brief sets the output value corresponding to the selected note
@@ -104,28 +115,27 @@ char * note_to_string(sequencer_t *seq, uint16_t note_step);
  *
  * 	@return void.
  */
-void play_note(sequencer_t *self,note note, uint8_t channel);
+void play_note(sequencer_t *self, note note, uint8_t channel);
 
 void set_tempo(sequencer_t *self, int16_t set);
 
-void free_play_pressed(sequencer_t *self,uint8_t channel,uint16_t value,uint8_t octave);
+void free_play_pressed(sequencer_t *self, uint16_t value);
 
-void free_play_released(sequencer_t *self,uint8_t channel);
+void free_play_released(sequencer_t *self, uint16_t value);
 
 void sequencer_pause_play(sequencer_t *self);
 
-void step_reverse(sequencer_t * self);
+void step_reverse(sequencer_t *self);
 
-void step_forward(sequencer_t * self);
+void step_forward(sequencer_t *self);
 
 // EDIT
 
-
 void edit_step_value(sequencer_t *self, int8_t value);
 
-void edit_step_type(sequence_t * self, uint8_t type);
+void edit_step_type(sequence_t *self, uint8_t type);
 
-void set_rest_step(sequencer_t * self, uint8_t length);
+void set_rest_step(sequencer_t *self, uint8_t length);
 
 void add_note(sequencer_t *self, note note);
 

@@ -9,15 +9,16 @@
 #define DOTTEDSIXTEENTH 3
 #define THIRTYSECONDNOTE 1
 
-
 /**
-*	@brief holds note information
-*/
- typedef struct{
-    uint8_t legato;   //length of the gate, same length as length gives full legato
-    uint8_t type;   //For placing and removing notes  
-    int16_t value;  //the 12 semitones
-    uint8_t octave; 
-    uint8_t length; 
+ *	@brief holds note information
+ */
+typedef struct
+{
+    uint8_t legato; // length of the gate, same length as length gives full legato
+    uint8_t type;   // For placing and removing notes
+    int16_t value;  // the 12 semitones
+    uint8_t octave;
+    uint8_t length;
     int8_t modulation;
+    bool protected;
 } note;
