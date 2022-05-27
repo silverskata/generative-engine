@@ -7,8 +7,8 @@ typedef struct
 {
     bool control_buttons[6];
     bool control_buttons_flag[6];
-    int16_t keyboard_buttons[2];
-    bool keyboard_buttons_flag[2];
+    bool keyboard_prev_buttons[13];
+    bool keyboard_buttons_flag[13];
     queue_t controlqueue;
     queue_t keyboardqueue;
 } button_control_t;
@@ -26,3 +26,5 @@ void read_keyboard(button_control_t *buttons);
 void read_control_released(button_control_t *buttons);
 
 void read_keyboard_released(button_control_t *buttons);
+
+uint8_t unison_high_note_priority(button_control_t *buttons);

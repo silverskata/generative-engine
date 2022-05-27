@@ -28,8 +28,7 @@ void init_sequencer(sequencer_t *self, sequence_t *s1, sequence_t *s2, repeating
         self->sequencers[k].total_notes = 0;
         self->sequencers[k].current_page = 0;
         self->sequencers[k].selected_step = 0;
-        self->sequencers[k].dynamic_generation = true;
-        self->sequencers[k].keyboard_playing = false;
+        self->sequencers[k].id = k;
         self->sequencers[k].active = false;
         self->sequencers[k].harmonize = 0;
         self->sequencers[k].lowest_octave = 255;
@@ -40,7 +39,6 @@ void init_sequencer(sequencer_t *self, sequence_t *s1, sequence_t *s2, repeating
     self->sequencers[0].GATE_CHANNEL = GATE3;
     self->sequencers[1].CV_CHANNEL = DAC_CV1;
     self->sequencers[1].GATE_CHANNEL = GATE1;
-    
     self->keyboard_mode= KEYBOARD_UNISON;
     self->current_key = keys[KEY_C];
     self->playing = false;
@@ -70,10 +68,6 @@ void select_active_sequencer(sequencer_t *self, int8_t direction)
         self->active_sequence = SEQUENCER_AMOUNT - 1;
 }
 
-void set_harmony_lock(sequence_t * self, int8_t harmonize,int8_t harmony){
-    self->harmonize = harmonize;
-    self->harmony = harmony;
-}
 
 void sequence_on_off(sequencer_t *self)
 {
@@ -102,27 +96,30 @@ void play_note(sequencer_t *self, note note, uint8_t channel)
 uint8_t played_note[2];
 uint8_t active_notes=0;
 
+void reset_notes(){
+    played_note[0] = 0;
+    played_note[1] = 0;
+    active_notes = 0;
+}
+
 void free_play_pressed(sequencer_t *self, uint16_t value)
 {
-    if(!value&0x01) return;
-    value = value >> 1;
+    if(value >12) return;
     if(self->keyboard_mode == KEYBOARD_OFF) return;
     played_note[active_notes] = value;
     active_notes ++;
-    if(active_notes>2) active_notes = 2;
 
     switch(self->keyboard_mode){
         case KEYBOARD_UNISON:
         for(uint8_t i = 0; i< SEQUENCER_AMOUNT;i++){
-            if(!self->sequencers[i].active){
-            set_voltage(self->sequencers[i].CV_CHANNEL, (played_note[active_notes-1] + (self->keyboard_octave * 12)) * NOTE_VOLTAGE);
+            if(!self->sequencers[i].active || !self->playing){
+            set_voltage(self->sequencers[i].CV_CHANNEL, (value + (self->keyboard_octave * 12)) * NOTE_VOLTAGE);
             gpio_put(self->sequencers[i].GATE_CHANNEL, GATE_ON);
             }
         }
         break;
         case KEYBOARD_POLY:
-                for(uint8_t i = 0; i< active_notes+1;i++){
-            self->sequencers[i].keyboard_playing = true;
+            for(uint8_t i = 0; i< active_notes+1;i++){
             set_voltage(self->sequencers[i].CV_CHANNEL, (played_note[i] + (self->keyboard_octave * 12)) * NOTE_VOLTAGE);
             gpio_put(self->sequencers[i].GATE_CHANNEL, GATE_ON);
         }
@@ -131,32 +128,29 @@ void free_play_pressed(sequencer_t *self, uint16_t value)
 }
 void free_play_released(sequencer_t *self, uint16_t value)
 {   
-    if(value&0x01) return;
-    value = value >> 1;
-    active_notes --;
-    if(active_notes>2) active_notes = 0;
-    if(self->keyboard_mode == KEYBOARD_OFF || self->playing && self->sequencers[0].active && self->sequencers[1].active) return;
-
+   
+    if(self->keyboard_mode == KEYBOARD_OFF) return; 
+        active_notes --;
+    if(value >12) active_notes = 0;
     switch(self->keyboard_mode){
         case KEYBOARD_UNISON:
             if(active_notes == 0){
             for(uint8_t i = 0; i< SEQUENCER_AMOUNT; i++){
-                if(!self->sequencers[i].active){
+                if(!self->sequencers[i].active || !self->playing){
                     gpio_put(self->sequencers[i].GATE_CHANNEL, GATE_OFF);
                 }
             }
             }
-            else if(active_notes ==1){ // TODO FIX NOTE ORDER
-            if(value>=played_note[1])
+            else{
                 for(uint8_t i = 0; i< SEQUENCER_AMOUNT; i++){
-                if(!self->sequencers[i].active){
-                    set_voltage(self->sequencers[i].CV_CHANNEL, (played_note[0] + (self->keyboard_octave * 12)) * NOTE_VOLTAGE);
+                    if(!self->sequencers[i].active || !self->playing){
+                        set_voltage(self->sequencers[i].CV_CHANNEL, (value + (self->keyboard_octave * 12)) * NOTE_VOLTAGE);
+                    }
                 }
-            }
             }
         break;
         case KEYBOARD_POLY:
-            self->sequencers[active_notes].keyboard_playing = false;
+
             gpio_put(self->sequencers[active_notes].GATE_CHANNEL, GATE_ON);
         break;
     }
@@ -473,5 +467,23 @@ char *note_to_string(sequencer_t *seq, uint16_t note_step)
     uint8_t val = seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][note_step].value;
     int8_t key_mod = seq->current_key.modulation[val];
     int8_t scale_mod = seq->current_scale.tonal[val];
-    return scale_modulation_identifier[val].name[2 + key_mod + scale_mod];
+    int8_t key_scaling = seq->current_key.number;
+
+        switch (key_scaling){
+            case KEY_F_SHARP:
+            key_scaling -= 6;
+            break;
+            case KEY_B_FLAT:
+            case KEY_A_FLAT:
+            key_scaling -= 8;
+            break;
+            case KEY_D_FLAT:
+            case KEY_E_FLAT:
+                key_scaling -= 10;
+            break;
+        }
+    key_scaling += val;
+    while(key_scaling >= 7)
+        key_scaling -= 7;
+    return scale_modulation_identifier[key_scaling].name[2 + key_mod + scale_mod];
 }

@@ -157,13 +157,14 @@ const uint8_t font_8x5[] =
 			0x00, 0x20, 0xF0, 0x20, 0x00, // UP arrow for octave
 			0x1B, 0x0A, 0x1F, 0x0A, 0x00, // # sharp, sign
 			0x0F, 0x0C, 0x00, 0x00, 0x00, //b flat sign
+			0X00, 0X04, 0x0F, 0x04, 0x00, // down arrow
 
 };
     
-/* 	0 0 0 0 0
-	0 0 0 0 0
-	0 0 0 0 0
-	0 0 0 0 0
+/* 	0 0 1 0 0
+	0 0 1 0 0
+	0 1 1 1 0
+	0 0 1 0 0
 	0 0 1 0 0
 	0 1 1 1 0
 	0 0 1 0 0

@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdint.h>
 #include "hardware/timer.h"
 #include "include/controller.h"
 
@@ -16,7 +14,6 @@ controller_t controller = {
 sequencer_t sequencer;
 sequence_t s1;
 sequence_t s2;
-generator_t gen;
 
 int main()
 {
@@ -37,7 +34,6 @@ int main()
     //SETUP
     set_sys_clock_khz(100 * 1000, true);
     struct repeating_timer timer;
-    sleep_ms(500);
     stdio_init_all();
     sleep_ms(100);
     dac_init();
@@ -48,8 +44,7 @@ int main()
     sleep_ms(100);
     setup_ui();
     UI_startup();
-    create_generator(&gen, 70, 5, 3);
-    gen_sequence_setup(&gen,&sequencer.sequencers[0]);
+
     multicore_launch_core1(input_core);
     flash_led(6,500);
     uint64_t time = time_us_64();
@@ -58,19 +53,45 @@ int main()
 
 
 
-
+/* 
+int button_press=0;
+int keyboard_press = -1;
+int encoder_direction = 0; */
 
     //MAIN LOOP
     while (1)
     {
-        //MAIN CONTROLLER TASK
+
+/* 
+     if (!queue_is_empty(&controller.buttons->controlqueue))
+    {
+        button_press = read_control_queue(&controller);
+        if (!update_shift(&controller, button_press));
+        UI_Test(keyboard_press, button_press, encoder_direction,&controller);
+    }
+    else
+        button_press = 0;
+            if(controller.keyboard_active == 3 && !queue_is_empty(&controller.buttons->keyboardqueue)){
+                keyboard_press = read_keyboard_queue(&controller);
+                        UI_Test(keyboard_press, button_press, encoder_direction,&controller);
+            }
+            else keyboard_press = -1;
+    if (multicore_fifo_rvalid()){
+        encoder_direction = multicore_fifo_pop_blocking();
+        UI_Test(keyboard_press, button_press, encoder_direction,&controller);
+    }
+    else
+        encoder_direction = 0;
+      */
+
+         //MAIN CONTROLLER TASK
         control_task(&controller);
 
         //UI AND SCREEN REFRESH
         if(time-time_us_64() > 30000){
-        UI_main_menu(&sequencer,controller.menu_state, controller.selection_state, controller.note);
+        UI_main_menu(&sequencer, controller.menu_state, controller.menu_active, controller.selection_state, controller.note);
         time = time_us_64();
-        }
+        } 
 
     }
 }
@@ -82,7 +103,7 @@ void input_core()
     encoder_t encoder;
     button_init(&buttons);
     init_encoder(&encoder);
-    init_controller(&controller,&buttons,&sequencer,&gen);
+    init_controller(&controller,&buttons,&sequencer);
     int16_t amount = 0;
     uint8_t uPC = 0;
     flash_led(2,400);
@@ -121,11 +142,8 @@ bool repeating_timer_callback(struct repeating_timer *t)
         sequencer.current_step++;
         if (sequencer.current_step == sequencer.end_of_sequence){
             sequencer.current_step = 0;
-            gen_sequence_run(&gen,&sequencer.sequencers[0]);
-            for(uint8_t i = 0;i<SEQUENCER_AMOUNT;i++)
-                if(sequencer.sequencers[i].dynamic_generation){
-
-                }
+            if(controller.dynamic_generation)
+                dynamic_generation(&controller);
         }
     }
     return true;

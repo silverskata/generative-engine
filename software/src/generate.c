@@ -1,21 +1,21 @@
 #include "../include/generate.h"
 
 
-void create_generator(generator_t *gen, uint8_t base_probability, uint8_t probability_scaling_factor, uint8_t delay){
-    srand(time_us_64());
-    gen->base_prob = base_probability;
+void create_generator(generator_t *gen){
+    gen->active = false;
+    gen->base_prob = 0;
     gen->changes_made = 0;
-    gen->current_prob = base_probability;
-    gen->scale = probability_scaling_factor;
+    gen->current_prob = 0;
+    gen->scale = 0;
     gen->cycles = 0;
     gen->max_changes = 1;
     gen->reset = -1;
     gen->reset_on_change = true;
     gen->range = 1;
     gen->direction = 0;
-    gen->delay = delay;
-    for(int i = 0; i<10;i++)
-    gen->possible_val[i]=1;
+    gen->delay = 0;
+    for(int i = 0; i<12;i++)
+        gen->possible_val[i]=1;
 };
 
 uint16_t gen_random(uint8_t amount)
@@ -23,6 +23,45 @@ uint16_t gen_random(uint8_t amount)
     srand(time_us_64());
     return rand() % amount;
 }
+
+
+bool delayed(generator_t *gen){
+    if(gen->cycles < gen->delay) {
+        gen->cycles ++;
+        return true;
+    }
+    return false;
+}
+
+void random_direction(generator_t *gen){
+    if(gen->direction==0 || gen->cycles == 0){
+        if(gen_random(2))
+            gen->direction = 1;
+        else 
+            gen->direction = -1;
+    }
+}
+
+bool gen_update(generator_t *gen){
+    if(gen->cycles == gen->reset || gen->reset_on_change && gen->changed){
+        gen->cycles = 0;
+        gen->current_prob = gen->base_prob;
+    }
+    else {
+        gen->current_prob += gen->scale;
+        if(gen->current_prob>100)
+        gen->current_prob = 100;
+    }
+
+    if(gen->changed){
+        gen->changed = false;
+        gen->changes_made = 0;
+
+    }
+    gen->cycles ++;
+    return !gen->changed;
+}
+
 
 uint8_t *changed_notes;
 uint16_t prev_total;
@@ -42,21 +81,23 @@ void gen_sequence_update(generator_t *gen,sequence_t * seq){
     prev_total = seq->total_notes;
 }
 
+
 bool gen_sequence_run(generator_t *gen,sequence_t * seq){
-    if(gen->cycles < gen->delay) {
+if(gen->cycles < gen->delay) {
         gen->cycles ++;
         return false;
     }
-    if(gen->direction==0 || gen->cycles == 0){
+    if(gen->direction==0){
         if(gen_random(2))
             gen->direction = 1;
         else 
             gen->direction = -1;
     }
-     for(int16_t i = 0;i<seq->last_step || gen->max_changes >= gen->changes_made; i++){
-        if(seq->note_value[seq->current_page][i].type==REGULAR_NOTE ){
-            note temp = seq->note_value[seq->current_page][i];
+
+     for(int16_t i = 0; i < seq->last_step && gen->changes_made < gen->max_changes; i++){
+        if(seq->note_value[seq->current_page][i].type==REGULAR_NOTE && !seq->note_value[seq->current_page][i].protected){
             if(gen_random(100)<gen->current_prob){
+                note temp = seq->note_value[seq->current_page][i];
                 int8_t val = temp.value +  (1 * gen->direction);
                  if(val<0){ 
                     val += 7;
@@ -84,6 +125,7 @@ bool gen_sequence_run(generator_t *gen,sequence_t * seq){
         if(gen->cycles == gen->reset || gen->reset_on_change && gen->changed){
             gen->cycles = 0;
             gen->current_prob = gen->base_prob;
+            gen->direction = 0;
         }
         else gen->current_prob += gen->scale;
         if(gen->changed){
@@ -94,8 +136,79 @@ bool gen_sequence_run(generator_t *gen,sequence_t * seq){
         else return false;
 }
 
-
-void gen_dynamic(generator_t *gen)
-{
+bool gen_scale_run(generator_t *gen,sequencer_t * seq){
+    if(delayed(gen)) return false;
+    if(gen->current_prob < gen_random(100)){
+        random_direction(gen);
+        uint8_t count;
+        if(gen->range>1)
+            count=gen_random(gen->range) + 1;
+        else count = 1;
+        while(!gen->possible_val[seq->current_scale.number + count * gen->direction] && count<7)
+            count++;
+        if(count<7)
+            seq->current_scale = scales[seq->current_scale.number + count * gen->direction];
+        gen->changed = true;
+    }
+    return gen_update(gen);
 }
+
+bool gen_key_run(generator_t *gen,sequencer_t * seq){
+    if(delayed(gen)) return false;
+    if(gen->current_prob > gen_random(100)){
+        random_direction(gen);
+        uint8_t count = 0;
+        int16_t chosen_key = seq->key_select + gen->direction;
+        while(!gen->possible_val[chosen_key] && count<12){
+            count++;
+            if(gen->direction>0){
+                chosen_key ++;
+                if(chosen_key>11)
+                chosen_key=0;
+            }
+            else{
+                chosen_key --;
+                if(chosen_key<0)
+                chosen_key=11;
+            }
+        }
+            
+        if(count<12)
+            set_key(seq, keys[key_selector[chosen_key]]);
+        seq->key_select = chosen_key;
+        gen->changed = true;
+    }
+    return gen_update(gen);
+}
+bool gen_harmony_run(generator_t *gen, sequence_t * seq){
+    if(delayed(gen)) return false;
+    if( gen->current_prob > gen_random(100) && seq->harmonize == 0){
+        uint8_t count;
+        if(gen->range>1)
+            count=gen_random(gen->range) + 1;
+        else count = 0;
+        while(!gen->possible_val[count] && count<7)
+            count++;
+        if(count<7){
+            seq->harmony=count;
+            seq->harmonize = -1;
+            gen->changed = true;
+            gen->changes_made = gen->cycles;
+        }
+    }
+    if(gen->cycles == gen->reset || (gen->max_changes + gen->changes_made) == gen->cycles){
+        seq->harmonize = 0;
+        seq->harmony = 0;
+        gen->cycles = 0;
+        gen->changed = false;
+        gen->current_prob = gen->base_prob;
+    }
+    else{ 
+        gen->current_prob += gen->scale;
+        gen->cycles ++;
+    }
+
+}
+
+
 

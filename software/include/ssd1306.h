@@ -299,6 +299,8 @@ void display_box_no_top(ssd1306_t *p, uint32_t x, uint32_t y, uint32_t width, ui
 
 void draw_up_octave(ssd1306_t *disp, int16_t x, int16_t y, uint8_t amount);
 
+void draw_down_octave(ssd1306_t *disp, int16_t x, int16_t y, uint8_t amount);
+
 void draw_lowered(ssd1306_t *disp, int16_t x, int16_t y);
 
 void draw_raised(ssd1306_t *disp, int16_t x, int16_t y);

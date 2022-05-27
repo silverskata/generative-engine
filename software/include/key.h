@@ -63,9 +63,9 @@ static const key keys[] = {
     {.name = "F#", .number = KEY_F_SHARP, .value = F_SHARP_VAL, .modulation = {1, 1, 1, 0, 1, 1, 1}},
     {.name = "G#", .number = KEY_G_SHARP, .value = G_SHARP_VAL, .modulation = {1, 1, 0, 1, 1, 0, 0}},
     {.name = "Db", .number = KEY_D_FLAT, .value = D_FLAT_VAL, .modulation = {-1, -1, 0, -1, -1, -1, 0}},
-    {.name = "Eb", .number = KEY_E_FLAT, .value = E_FLAT_VAL, .modulation = {-1, -1, 0, -1, -1, -1, 0}},
-    {.name = "Ab", .number = KEY_A_FLAT, .value = A_FLAT_VAL, .modulation = {-1, -1, 0, -1, -1, -1, 0}},
-    {.name = "Bb", .number = KEY_B_FLAT, .value = B_FLAT_VAL, .modulation = {-1, -1, 0, -1, -1, -1, 0}},
+    {.name = "Eb", .number = KEY_E_FLAT, .value = E_FLAT_VAL, .modulation = {-1, 0, 0, -1, -1, 0, 0}},
+    {.name = "Ab", .number = KEY_A_FLAT, .value = A_FLAT_VAL, .modulation = {-1, -1, 0, -1, -1, 0, 0}},
+    {.name = "Bb", .number = KEY_B_FLAT, .value = B_FLAT_VAL, .modulation = {-1, 0, 0, -1, 0, 0, 0}},
 };
 
 static char key_list[15][3] = {

@@ -35,8 +35,7 @@ typedef struct
     uint8_t time_signature[2];
     int8_t modulation;
     uint16_t last_step;
-    bool dynamic_generation;
-    bool keyboard_playing;
+    uint8_t id;
     int8_t harmonize;     //select which channel to harmonize with 0 for off
     int8_t harmony;       //Select which interval to harmonize
     uint16_t total_notes; //counting the number of REGULAR_NOTE for the generator
@@ -128,6 +127,8 @@ void sequencer_pause_play(sequencer_t *self);
 void step_reverse(sequencer_t *self);
 
 void step_forward(sequencer_t *self);
+
+void reset_notes();
 
 // EDIT
 

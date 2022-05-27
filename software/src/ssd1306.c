@@ -40,6 +40,7 @@ char quarterrest2[] = {(char)130};
 char eightrest[] = {(char)128};
 char sixteenthrest[] = {(char)131};
 char up_arrow[] = {(char)182};
+char down_arrow[] = {(char)185};
 char raised_symbol[] = {183};
 char lowered_symbol[] = {184};
 
@@ -513,6 +514,14 @@ void draw_up_octave(ssd1306_t *disp, int16_t x, int16_t y, uint8_t amount)
     for (uint8_t i = 0; i < amount; i++)
     {
         display_string(disp, x - 3, y - 12 - 4 * i, 1, up_arrow);
+    }
+}
+
+void draw_down_octave(ssd1306_t *disp, int16_t x, int16_t y, uint8_t amount)
+{
+    for (uint8_t i = 0; i < amount; i++)
+    {
+        display_string(disp, x - 3, y + 4 + 4 * i, 1, down_arrow);
     }
 }
 

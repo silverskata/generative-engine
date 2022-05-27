@@ -3,9 +3,12 @@
 #include "ssd1306.h"
 #include "../include/generate.h"
 
+
 void setup_ui();
 
-void UI_main_menu(sequencer_t *seq, uint8_t menu_state, int8_t selection_state, note control_note);
+void UI_menu_open(uint8_t selected);
+
+void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t selection_state, note control_note);
 
 void UI_generate_menu(generator_t *gen, sequence_t * s);
 
@@ -15,7 +18,6 @@ void UI_draw_sheet();
 
 void UI_startup();
 
-void UI_Test(int val1, int val2, int val3);
 
 void UI_main_selection(uint8_t UI_State_selector);
 

@@ -11,7 +11,7 @@ const uint16_t keyboard_value_map[] = {KEYBOARD_ONE, KEYBOARD_TWO, KEYBOARD_THRE
                                        KEYBOARD_EIGHT, KEYBOARD_NINE, KEYBOARD_TEN, KEYBOARD_ELEVEN, KEYBOARD_TVELVE, KEYBOARD_THIRTEEN};
 
 uint16_t queue_control_p[6];
-uint16_t queue_keyboard_p[2];
+uint16_t queue_keyboard_p;
 uint8_t keys_pressed = 0;
 
 void button_init(button_control_t *self)
@@ -47,15 +47,15 @@ void button_init(button_control_t *self)
     gpio_set_dir(COL3, false);
 
     queue_init(&self->controlqueue, sizeof(uint16_t), 10);
-    queue_init(&self->keyboardqueue, sizeof(uint16_t), 6);
+    queue_init(&self->keyboardqueue, sizeof(uint16_t), 10);
 
     for (uint8_t i = 0; i < 6; i++)
     {
         self->control_buttons[i] = false;
         self->control_buttons_flag[i] = false;
-        self->keyboard_buttons[i / 3] = -1;
-        self->keyboard_buttons_flag[i / 3] = false;
     }
+    for (uint8_t i = 0; i < 13; i++)
+        self->keyboard_buttons_flag[i] = false;
 }
 
 void read_control_released(button_control_t *buttons)
@@ -75,49 +75,34 @@ void read_control_released(button_control_t *buttons)
     }
 }
 
+uint8_t unison_high_note_priority(button_control_t *buttons){
+    int8_t result = -1;
+    for(uint8_t i = 0; i<13; i++)
+        if(buttons->keyboard_buttons_flag[i])
+            result = i;
+    return result;
+}
+
+uint8_t unison_low_note_priority(button_control_t *buttons){
+    for(uint8_t i = 0; i<13; i++)
+        if(buttons->keyboard_buttons_flag[i])
+            return i;
+}
+
 void read_keyboard_released(button_control_t *buttons)
 {
     int16_t keys = matrix_poll();
-    uint16_t keyhits[] = {0, 0};
-    if (keys == -1)
+    for (uint8_t i = 0; i < 13; i++)
     {
-        for (uint8_t i = 0; i < 2; i++)
+        if ((!((keys >> i) & 1) || keys==-1) && buttons->keyboard_buttons_flag[i])
         {
-            if (buttons->keyboard_buttons_flag[i])
-            {
-                buttons->keyboard_buttons_flag[i] = false;
-                queue_keyboard_p[i] = (buttons->keyboard_buttons[i] << 1);
-                buttons->keyboard_buttons[i] = -1;
-                queue_add_blocking(&buttons->keyboardqueue, &queue_keyboard_p[i]);
-            }
-        }
-    }
-    else
-    {
-        for (uint8_t i = 0; i < 13; i++)
-        {
-            if ((keys >> i) & 1)
-            {
-                if (buttons->keyboard_buttons[0] == i)
-                    keyhits[0] = 1;
-                else if (buttons->keyboard_buttons[1] == i)
-                    keyhits[1] = 1;
-                else if (buttons->keyboard_buttons[2] == i)
-                    keyhits[2] = 1;
-            }
-        }
-        for (uint8_t i = 0; i < 2; i++)
-        {
-            if (!keyhits[i] && buttons->keyboard_buttons_flag[i])
-            {
-                buttons->keyboard_buttons_flag[i] = false;
-                queue_keyboard_p[i] = (buttons->keyboard_buttons[i] << 1);
-                buttons->keyboard_buttons[i] = -1;
-                queue_add_blocking(&buttons->keyboardqueue, &queue_keyboard_p[i]);
-            }
+            buttons->keyboard_buttons_flag[i] = false;
+            queue_keyboard_p = i << 1;
+            queue_add_blocking(&buttons->keyboardqueue, &queue_keyboard_p);
         }
     }
 }
+
 
 void read_control_buttons(button_control_t *buttons)
 {
@@ -156,46 +141,18 @@ void read_control_buttons(button_control_t *buttons)
 
 void read_keyboard(button_control_t *buttons)
 {
-    if (queue_is_full(&buttons->keyboardqueue))
-        return;
-    int8_t keypresses[2] = {-1, -1};
-    uint8_t keycount = 0;
+    if (queue_is_full(&buttons->keyboardqueue)) return;
     int16_t keys = matrix_poll();
-    if (keys == -1)
-    {
-        return;
-    }
+    if (keys == -1) return;
     for (uint8_t i = 0; i < 13; i++)
-        if ((keys >> i) & 1)
+        if (((keys >> i) & 1) && !buttons->keyboard_buttons_flag[i])
         {
-            keypresses[keycount] = i;
-            keycount++;
-            if (keycount > 1)
-                break;
+                keys_pressed ++;
+                queue_keyboard_p = i<<1|1;
+                buttons->keyboard_buttons_flag[i] = true;
+                queue_add_blocking(&buttons->keyboardqueue, &queue_keyboard_p);
         }
-    switch (keycount)
-    {
-    case 2:
-        if (!buttons->keyboard_buttons_flag[1] && buttons->keyboard_buttons[1] == -1 && keypresses[1] != -1)
-        {
-            buttons->keyboard_buttons_flag[1] = true;
-            if (keypresses[1] == buttons->keyboard_buttons[0])
-                buttons->keyboard_buttons[1] = keypresses[0];
-            else
-                buttons->keyboard_buttons[1] = keypresses[1];
-            queue_keyboard_p[1] = buttons->keyboard_buttons[1] << 1 | 1;
-            queue_add_blocking(&buttons->keyboardqueue, &queue_keyboard_p[1]);
-        }
-    case 1:
-        if (!buttons->keyboard_buttons_flag[0] && buttons->keyboard_buttons[0] == -1 && keypresses[0] != -1)
-        {
-            buttons->keyboard_buttons_flag[0] = true;
-            buttons->keyboard_buttons[0] = keypresses[0];
-            queue_keyboard_p[0] = keypresses[0] << 1 | 1;
-            queue_add_blocking(&buttons->keyboardqueue, &queue_keyboard_p[0]);
-        }
-    }
-}
+ }
 
 bool button_poll(uint8_t button)
 {

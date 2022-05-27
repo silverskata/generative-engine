@@ -1,7 +1,8 @@
 #include "../include/ui.h"
+#include "../include/controller.h"
 
 // UI
-char menu_main[][12] = {"MAIN", "SEQUENCERS", "FREE PLAY", "EDIT", "GENERATE", "SAVE", "LOAD"};
+char menu_main[][12] = {"Play", "Main", "Edit", "Generate","Song", "Save/Load","Settings"};
 char menu_sequencers[][12] = {"Sequence 1", "Sequence 2", "Sequence 3"};
 char menu_edit[][12] = {"note", "length", ""};
 char menu_generate[][12] = {"Create", "Complete", "Dynamic"};
@@ -20,7 +21,19 @@ void setup_ui()
     ssd1306_clear(&disp);
 }
 
-
+void UI_Test(int val1, int val2, int val3, controller_t *control){
+    char buf[20];
+    char buf2[20];
+    char buf3[20];
+    sprintf(buf,"key1: %d",val1);
+    sprintf(buf2,"key2: %d",val2);
+    sprintf(buf3,"%d",val3);
+    ssd1306_clear(&disp);
+    display_write_tight(&disp,5,2,2,buf);
+    display_write_tight(&disp,5,12,2,buf2);
+    display_write_tight(&disp,5,22,2,buf3);
+    ssd1306_show(&disp);
+}
 
 
 void UI_generate_menu(generator_t *gen, sequence_t * s)
@@ -41,9 +54,10 @@ void UI_generate_menu(generator_t *gen, sequence_t * s)
     ssd1306_show(&disp);
 }
 
-void UI_main_menu(sequencer_t *seq, uint8_t menu_state, int8_t selection_state, note control_note)
+void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t selection_state, note control_note)
 {
-
+    if(menu_active)UI_menu_open(selection_state);
+      else{
     switch (menu_state)
     {
     case 0: // PLAYING
@@ -59,21 +73,24 @@ void UI_main_menu(sequencer_t *seq, uint8_t menu_state, int8_t selection_state, 
         UI_main_selection(selection_state);
         main_menu(seq);
         break;
-    case 2: // Menu Open
-    // Do not clear the display
     case 3: // Generate menu
         break;
-    case 4: // Step editor
+    case 2: // Step editor
         ssd1306_clear(&disp);
         UI_draw_sheet();
         edit_menu(seq, (int)(seq->sequencers[seq->active_sequence].selected_step / 32), &control_note);
         UI_draw_bar(seq, (int)(seq->sequencers[seq->active_sequence].selected_step / 32), seq->sequencers[seq->active_sequence].selected_step + 1, menu_state);
 
         break;
-    case 5: // sequence editor
+    case 4: // song
+
+        break;
+    case 5: // save
         break;
     case 6: // settings
         break;
+    }
+    display_write_tight(&disp, 5, 0, 2, menu_main[menu_state]); // MAIN MENU LOCATION
     }
     ssd1306_show(&disp);
 }
@@ -85,13 +102,18 @@ void edit_menu(sequencer_t *seq, uint8_t current_bar, note *control_note)
     display_write_tight(&disp, 0, 16, 2, bar_buf); // CURRENT BAR
     char octave_buf[5];
     sprintf(octave_buf, "%d", seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][seq->sequencers[seq->active_sequence].selected_step].octave);
-    display_write_tight(&disp, 111, 0, 2, note_to_string(seq, seq->sequencers[seq->active_sequence].selected_step)); // KEY LOCATION
-    display_write_tight(&disp, 123, 0, 2, octave_buf);
+    char plus[4] ="ADD";
+    if(seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][seq->sequencers[seq->active_sequence].selected_step].type==NEXT_NOTE)
+        display_write_tight(&disp, 111, 0, 2, plus); // NOTE LOCATION
+    else{
+        display_write_tight(&disp, 111, 0, 2, note_to_string(seq, (seq->sequencers[seq->active_sequence].selected_step))); // NOTE LOCATION
+        display_write_tight(&disp, 123, 0, 2, octave_buf);
+    }
     char note_buf[8];
-    sprintf(note_buf, "legato %d  octave %d", control_note->legato, control_note->octave);
-    display_write_tight(&disp, 10, 55, 3, note_buf);
-    char note_word[] = "note length:";
-    display_write_tight(&disp, 5, 3, 3, note_word);
+    sprintf(note_buf, "s %d legato %d  octave %d", seq->active_sequence+1, control_note->legato, control_note->octave);
+    display_write_tight(&disp, 2, 55, 3, note_buf);
+    char note_word[] = "length:";
+    display_write_tight(&disp, 40, 6, 3, note_word);
     uint8_t x = 83;
     switch (control_note->length)
     {
@@ -123,7 +145,14 @@ void edit_menu(sequencer_t *seq, uint8_t current_bar, note *control_note)
         break;
     }
 }
+void UI_menu_open(uint8_t selected){
+    display_black_square(&disp,1,0,58,65);
+    display_box_no_top(&disp,0,0,59,66);
+    for(uint8_t i = 0; i<7;i++)
+    display_write_tight(&disp, 5,1+i*9,3,menu_main[i]);
 
+    display_box(&disp,5,selected*9,49,9);
+}
 void main_menu(sequencer_t *seq)
 {
     char temp_buf[7];
@@ -145,7 +174,6 @@ void main_menu(sequencer_t *seq)
     char page_buf[2];
     sprintf(seq_buf, "page %d", seq->sequencers[seq->active_sequence].current_page + 1);
     display_write_tight(&disp, 5, 55, 2, seq_buf);
-    display_write_tight(&disp, 5, 0, 2, menu_main[0]);             // MAIN MENU LOCATION
     display_write_tight(&disp, 42, 0, 2, seq->current_key.name);   // KEY LOCATION
     display_write_tight(&disp, 62, 0, 2, seq->current_scale.name); // SCALE LOCATION
 }
@@ -196,25 +224,35 @@ void UI_draw_bar(sequencer_t *seq, uint8_t current_bar, int16_t current_step, ui
         uint16_t x = 12 + 7 * i / 2;
         if (seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar * 32 + i].type == REGULAR_NOTE)
         {
-            uint8_t height = seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar * 32 + i].value +
+            int16_t height = seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar * 32 + i].value +
                              key_value_map[seq->current_key.number] + seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar * 32 + i].octave * 7;
             uint16_t y;
             height = height - seq->sequencers[seq->active_sequence].lowest_octave * 7;
             uint8_t count_above = 0;
+            uint8_t count_below = 0;
 
             while (height > 14)
             {
                 height = height - 7;
                 count_above++;
             }
-
+            while(height<0){
+                height = height +7;
+                count_below++;
+            }
             y = note_y[height];
             if (count_above > 0)
-                ;
             draw_up_octave(&disp, x, y, count_above);
+            if(count_below >0)
+            draw_down_octave(&disp, x, y, count_below);
 
             switch (seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar * 32 + i].length)
             {
+            case WHOLENOTE:
+                    draw_wholenote(&disp, x, y);
+                if (current_step + 1 - WHOLENOTE <= current_bar * 32 + i && current_step >= current_bar * 32 + i + 1)
+                    display_circle(&disp, x, y, 4);
+                break;
             case DOTTEDSEMI:
                 draw_dotted(&disp, x, y);
             case SEMINOTE:
@@ -301,13 +339,13 @@ void UI_draw_bar(sequencer_t *seq, uint8_t current_bar, int16_t current_step, ui
                 break;
             }
         }
-        else if (seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar * 32 + i].type == NEXT_NOTE && menu_state == 4)
+        else if (seq->sequencers[seq->active_sequence].note_value[seq->sequencers[seq->active_sequence].current_page][current_bar * 32 + i].type == NEXT_NOTE && menu_state == EDIT_MENU)
         {
             display_circle(&disp, x, 33, 4);
-            if (blink_helper > 450)
+            if (blink_helper > 50)
                 display_fill_circle(&disp, x, 33, 2);
             blink_helper++;
-            if (blink_helper > 700)
+            if (blink_helper > 80)
                 blink_helper = 0;
         }
     }
