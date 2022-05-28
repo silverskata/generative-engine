@@ -26,7 +26,7 @@ uint16_t gen_random(uint8_t amount)
 
 
 bool delayed(generator_t *gen){
-    if(gen->cycles < gen->delay) {
+    if(gen->cycles < gen->delay -1) {
         gen->cycles ++;
         return true;
     }
