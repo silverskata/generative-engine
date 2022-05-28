@@ -8,7 +8,7 @@ add_library(src ${FILES})
     hardware_i2c 
     hardware_spi 
     hardware_timer
-    pico_multicore
+    pico_multicore 
     )
 
 

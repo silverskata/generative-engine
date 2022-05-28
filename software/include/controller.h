@@ -43,6 +43,7 @@ typedef struct
     uint8_t menu_state;
     uint8_t old_state;
     int16_t selection_state;
+    int16_t selection_sub_state;
     uint8_t keyboard_active; // 1 is off 3 is on.
     bool shift;
     note note;
@@ -59,6 +60,8 @@ void menu_active_state(controller_t *self, uint16_t button_press);
 uint16_t read_control_queue(controller_t *self);
 
 uint16_t read_keyboard_queue(controller_t *self);
+
+char * gen_to_string(uint8_t generator,uint8_t select);
 
 bool is_input(uint16_t val);
 

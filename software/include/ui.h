@@ -8,9 +8,9 @@ void setup_ui();
 
 void UI_menu_open(uint8_t selected);
 
-void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t selection_state, note control_note);
+void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t selection_state, note control_note, int8_t sub_select);
 
-void UI_generate_menu(generator_t *gen, sequence_t * s);
+void UI_generate_menu(uint8_t selection, uint8_t sub_selection);
 
 void UI_draw_bar(sequencer_t *seq, uint8_t current_bar, int16_t current_step, uint8_t menu_state);
 

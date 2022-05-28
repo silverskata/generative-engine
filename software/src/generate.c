@@ -80,8 +80,165 @@ void gen_sequence_update(generator_t *gen,sequence_t * seq){
         changed_notes[i]=0;
     prev_total = seq->total_notes;
 }
+void gen_key_set(generator_t *gen, uint8_t selection, int8_t direction){
+    switch(selection){
+        case 0: //NOP State, the menu item is selected
+        break;
+        case 1: //turn the generator on
+            if(direction>0)
+                gen->active = 1;
+            else if(direction<0)
+                gen->active = 0;
+        break;
+        case 2:  //Base probability
+            if(!(gen->base_prob==0 && direction <0)) gen->base_prob += direction;
+            if(gen->base_prob >100) gen->base_prob = 100;
+            gen->current_prob = gen->base_prob;
+        break;
+        case 3: //Scaling
+            if(!(gen->scale==0 && direction <0)) gen->scale += direction;
+            if(gen->scale >100) gen->scale = 100;
+        break;
+        case 5: //delay
+            if(!(gen->delay==0 && direction <0)) gen->delay += direction;
+            if(gen->delay>511) gen->delay = 511;
+        break;
+        case 4: //Range
+        if(!(gen->range==0 && direction <0)) gen->range += direction;
+            if(gen->range >11) gen->range = 11;
+        break;      
+        case 6: // changes per cycle
+        if(!(gen->max_changes == 0 && direction <0)) gen->max_changes += direction;
+            if(gen->max_changes >512) gen->max_changes = 512;
+        break;               
+        default:
+        if(direction >0)
+        gen->possible_val[selection-7] = 1;
+        else if(direction<0)
+        gen->possible_val[selection-7] = 0;
+        break;
+    }
+}
 
+void gen_scale_set(generator_t *gen, uint8_t selection, int8_t direction){
+    switch(selection){
+        case 0: //NOP State, the menu item is selected
+        break;
+        case 1: //turn the generator on
+            if(direction>0)
+                gen->active = 1;
+            else if(direction<0)
+                gen->active = 0;
+        break;
+        case 2:  //Base probability
+            if(!(gen->base_prob==0 && direction <0)) gen->base_prob += direction;
+            if(gen->base_prob >100) gen->base_prob = 100;
+            gen->current_prob = gen->base_prob;
+        break;
+        case 3: //Scaling
+            if(!(gen->scale==0 && direction <0)) gen->scale += direction;
+            if(gen->scale >100) gen->scale = 100;
+        break;
+        case 5: //delay
+            if(!(gen->delay==0 && direction <0)) gen->delay += direction;
+            if(gen->delay>511) gen->delay = 511;
+        break;
+        case 4: //Range
+        if(!(gen->range==0 && direction <0)) gen->range += direction;
+            if(gen->range >6) gen->range = 6;
+        break; 
+            case 6: // changes per cycle
+        if(!(gen->max_changes == 0 && direction <0)) gen->max_changes += direction;
+            if(gen->max_changes >512) gen->max_changes = 512;
+        break;       
+        default:
+        if(direction >0)
+        gen->possible_val[selection-7] = 1;
+        else if(direction<0)
+        gen->possible_val[selection-7] = 0;
+        break;
+    }
+}
 
+void gen_harmony_set(generator_t *gen, uint8_t selection, int8_t direction){
+    switch(selection){
+        case 0: //NOP State, the menu item is selected
+        break;
+        case 1: //turn the generator on
+            if(direction>0)
+                gen->active = 1;
+            else if(direction<0)
+                gen->active = 0;
+        break;
+        case 2:  //Base probability
+            if(!(gen->base_prob==0 && direction <0)) gen->base_prob += direction;
+            if(gen->base_prob >100) gen->base_prob = 100;
+            gen->current_prob = gen->base_prob;
+        break;
+        case 3: //Scaling
+            if(!(gen->scale==0 && direction <0)) gen->scale += direction;
+            if(gen->scale >100) gen->scale = 100;
+        break;
+        case 5: //delay
+            if(!(gen->delay==0 && direction <0)) gen->delay += direction;
+            if(gen->delay>511) gen->delay = 511;
+        break;
+        case 4: //Range
+        if(!(gen->range==0 && direction <0)) gen->range += direction;
+            if(gen->range >6) gen->range = 6;
+        break;
+        case 6: // duration
+        if(!(gen->max_changes == 0 && direction <0)) gen->max_changes += direction;
+            if(gen->max_changes >511) gen->max_changes = 511;
+        break;           
+        default:
+        if(direction >0)
+        gen->possible_val[selection-7] = 1;
+        else if(direction<0)
+        gen->possible_val[selection-7] = 0;
+        break;
+    }
+}
+
+void gen_sequence_set(generator_t *gen, uint8_t selection, int8_t direction){
+    switch(selection){
+        case 0: //NOP State, the menu item is selected
+        break;
+        case 1: //turn the generator on
+            if(direction>0)
+                gen->active = 1;
+            else if(direction<0)
+                gen->active = 0;
+        break;
+        case 2:  //Base probability
+            if(!(gen->base_prob==0 && direction <0)) gen->base_prob += direction;
+            if(gen->base_prob >100) gen->base_prob = 100;
+            gen->current_prob = gen->base_prob;
+        break;
+        case 3: //Scaling
+            if(!(gen->scale==0 && direction <0)) gen->scale += direction;
+            if(gen->scale >100) gen->scale = 100;
+        break;
+        case 5: //delay
+            if(!(gen->delay==0 && direction <0)) gen->delay += direction;
+            if(gen->delay>511) gen->delay = 511;
+        break;
+        case 4: //Range
+        if(!(gen->range==0 && direction <0)) gen->range += direction;
+            if(gen->range >6) gen->range = 6;
+        break;
+        case 6: // changes per cycle
+        if(!(gen->max_changes == 0 && direction <0)) gen->max_changes += direction;
+            if(gen->max_changes >512) gen->max_changes = 512;
+        break;       
+        default:
+        if(direction >0)
+        gen->possible_val[selection-7] = 1;
+        else if(direction<0)
+        gen->possible_val[selection-7] = 0;
+        break;
+    }
+}
 bool gen_sequence_run(generator_t *gen,sequence_t * seq){
 if(gen->cycles < gen->delay) {
         gen->cycles ++;

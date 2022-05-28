@@ -108,6 +108,125 @@ void dynamic_generation(controller_t * control)
         gen_key_run(control->gen_key,control->sequencer);
         gen_sequence_run(control->gen_s1,&control->sequencer->sequencers[0]);
 }
+char buffer[15];
+
+char * gen_to_string(uint8_t generator,uint8_t select){
+    generator_t *gen;
+    switch(generator){ 
+    case 0:        
+        gen = &gen_s1;
+    break;
+    case 1:
+        gen = &gen_s2;
+    break;
+    case 2:
+        gen = &gen_key;
+    break;
+    case 3:
+        gen = &gen_scale;
+    break;
+    case 4:
+        gen = &gen_harmony;
+    break;
+    }
+    switch(select){
+        case 0:
+            if(gen->active)
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF");              
+        break;
+        case 1:
+            sprintf(buffer,"%d",gen->base_prob);
+        break;
+        case 2:
+            sprintf(buffer,"%d",gen->scale);
+        break;
+        case 3:
+            sprintf(buffer,"%d",gen->range);
+        break;
+        case 4:
+            sprintf(buffer,"%d",gen->delay);
+        break;
+        case 5:
+            sprintf(buffer,"%d",gen->max_changes);
+        break;
+        case 6:
+            if(gen->possible_val[0])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF"); 
+        break;
+        case 7:
+            if(gen->possible_val[1])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF"); 
+        break;
+        case 8:
+            if(gen->possible_val[2])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF"); 
+        break;
+        case 9:
+            if(gen->possible_val[3])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF"); 
+        break;
+        case 10:
+            if(gen->possible_val[4])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF"); 
+        break;
+        case 11:
+            if(gen->possible_val[5])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF"); 
+        break;
+        case 12:
+            if(gen->possible_val[6])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF");         
+        break;
+        case 13:
+            if(gen->possible_val[7])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF");         
+        break;
+        case 14:
+            if(gen->possible_val[8])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF");         
+        break; 
+        case 15:
+            if(gen->possible_val[9])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF");         
+        break; 
+        case 16:
+            if(gen->possible_val[10])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF");         
+        break;        
+        case 17:
+            if(gen->possible_val[11])
+                sprintf(buffer,"ON");
+            else  
+                sprintf(buffer,"OFF");         
+        break;        
+    }
+    return buffer;
+}
+
 void generative_demo(controller_t * control){
     control->gen_s1->base_prob = 2;
     control->gen_s1->current_prob = 2;
@@ -163,6 +282,7 @@ void init_controller(controller_t *control, button_control_t *buttons, sequencer
     control->note.type = REGULAR_NOTE;
     control->dynamic_generation = false;
     control->menu_active = false;
+    control->selection_sub_state = 0;
     control->gen_s1 = &gen_s1;
     control->gen_s2 = &gen_s2;
     control->gen_scale = &gen_scale;
@@ -177,7 +297,7 @@ void init_controller(controller_t *control, button_control_t *buttons, sequencer
     gen_sequence_setup(&gen_s2,&seq->sequencers[1]);
 
     //DEMO
-    generative_demo(control);
+    //generative_demo(control);
 };
 
 uint16_t read_control_queue(controller_t *self)
@@ -501,55 +621,90 @@ void update_state_main(controller_t *self, uint16_t button_press, int16_t keyboa
 
 
 
+
 void update_state_generation(controller_t *self, uint16_t button_press, int8_t encoder_direction)
 {
-
         int8_t selection_direction = 0;
-    if (button_press != 0)
+    if (is_input(button_press))
         switch (button_press >> 1)
         {
         case BUTTON_LEFT:
             // SHIFT LEFT BUTTON ACTS AS A BACK BUTTON, WILL BE ADDED IN NEXT ITERATION OF THE HARDWARE
-                self->selection_state --;
-                if(self->selection_state<0)
-                self->selection_state = GENERATOR_AMOUNT-1;
-            break;
-        case (BUTTON_RIGHT):
-            self->selection_state ++;
-                if(self->selection_state>=GENERATOR_AMOUNT)
-                self->selection_state = 0;
+            if (self->selection_sub_state == 0){
+                    self->selection_state --;
+                    if(self->selection_state<0)
+                    self->selection_state = GENERATOR_AMOUNT-1;
+            }
+            else
+                selection_direction =-1;
+        break;
+            case (BUTTON_RIGHT):
+                if (self->selection_sub_state == 0){
+                    self->selection_state ++;
+                    if(self->selection_state>=GENERATOR_AMOUNT)
+                        self->selection_state = 0;
+                }
+                else 
+                selection_direction =1;
             break;
         case (BUTTON_OK):
-        //TODO PLACEHOLDER BACK STATEMENT
-        self->menu_state = MAIN_PLAYING;
+        self->menu_active = true;
             break;
+        case BUTTON_UP:
+            self->selection_sub_state --;
+             switch(self->selection_state){
+                case 2: //Key
+                    if(self->selection_sub_state<0) self->selection_sub_state = 17;
+                break;
+                case 3: // Scale
+                    if(self->selection_sub_state<0) self->selection_sub_state = 12;
+                break;
+                default: //sequencers and harmony
+                    if(self->selection_sub_state<0) self->selection_sub_state = 13;
+                break;                                               
+            }
+        break;
+        case BUTTON_DOWN:
+            self->selection_sub_state ++;
+            switch(self->selection_state){
+                case 2: //Key
+                    if(self->selection_sub_state>17) self->selection_sub_state = 0;
+                break;
+                case 3: // Scale
+                    if(self->selection_sub_state>12) self->selection_sub_state = 0;
+                break;
+                default: //sequencers and harmony
+                    if(self->selection_sub_state>13) self->selection_sub_state = 0;
+                break;                                               
+            }
+        break;
         }
 
-
+        if(encoder_direction !=0) selection_direction = encoder_direction;
+        if(selection_direction !=0)
         switch (self->selection_state)
         {
-        case 0: // MENU
-            /*** TODO ROLL OUT THE MENU AND SELECT THE FIRST ITEM ***/
+        case 0: // Sequence 1
+            gen_sequence_set(self->gen_s1,self->selection_sub_state,selection_direction);
             break;
-        case 1: // KEY
-            select_key(self->sequencer, selection_direction);
+        case 1: // Sequence 2
+            gen_sequence_set(self->gen_s2,self->selection_sub_state,selection_direction);
             break;
-        case 2: // SCALE
-            select_scale(self->sequencer, selection_direction);
-            break;
-        case 3: // NOTES nop
-            break;
-        case 4: // PAGE
-            select_page(self->sequencer, selection_direction);
-            break;
-        case 5: // SEQUENCER
-            select_active_sequencer(self->sequencer, selection_direction);
-            break;
-        case 6: // TEMPO
-            if (self->shift)
-                set_tempo(self->sequencer, selection_direction * 5);
+        case 2: // Key
+            if(self->selection_sub_state >5)
+            gen_key_set(self->gen_key,self->selection_sub_state+1,selection_direction);
             else
-                set_tempo(self->sequencer, selection_direction);
+            gen_key_set(self->gen_key,self->selection_sub_state,selection_direction);
+            break;
+        case 3: // scale
+            if(self->selection_sub_state >5)
+            gen_scale_set(self->gen_scale,self->selection_sub_state+1,selection_direction);
+            else
+            gen_scale_set(self->gen_scale,self->selection_sub_state,selection_direction);
+            
+            break;
+        case 4: // harmony
+            gen_harmony_set(self->gen_harmony,self->selection_sub_state,selection_direction);
             break;
         }
 }

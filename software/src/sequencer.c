@@ -11,29 +11,10 @@ void init_sequencer(sequencer_t *self, sequence_t *s1, sequence_t *s2, repeating
     self->sequencers[0] = *s1;
     self->sequencers[1] = *s2;
     self->timer = timer;
-
-    for (uint8_t k = 0; k < SEQUENCER_AMOUNT; k++)
-    {
-
-        for (uint16_t j = 0; j < PAGESIZE; j++)
-        {
-            for (uint16_t i = 0; i < STEPSIZE * MAX_NOTE_LENGTH; i++)
-            {
-                self->sequencers[k].note_value[j][i].type = NO_NOTE;
-                self->sequencers[k].note_value[j][i].length = NO_NOTE;
-                self->sequencers[k].note_value[j][i].protected = false;
-            }
-            self->sequencers[k].note_value[j][0].type = NEXT_NOTE;
-        }
-        self->sequencers[k].total_notes = 0;
-        self->sequencers[k].current_page = 0;
-        self->sequencers[k].selected_step = 0;
-        self->sequencers[k].id = k;
-        self->sequencers[k].active = false;
-        self->sequencers[k].harmonize = 0;
-        self->sequencers[k].lowest_octave = 255;
+    for(uint8_t i = 0; i<SEQUENCER_AMOUNT;i++){
+        clear_sequence(&self->sequencers[i]);
+        self->sequencers[i].id = i;
     }
-
     //*** TODO when hardware is fixed ***//
     self->sequencers[0].CV_CHANNEL = DAC_PITCH3;
     self->sequencers[0].GATE_CHANNEL = GATE3;
@@ -51,6 +32,27 @@ void init_sequencer(sequencer_t *self, sequence_t *s1, sequence_t *s2, repeating
     self->tempo = 120;
     sleep_ms(200);
 }
+
+void clear_sequence(sequence_t  *seq){
+        for (uint16_t j = 0; j < PAGESIZE; j++)
+        {
+            for (uint16_t i = 0; i < STEPSIZE * MAX_NOTE_LENGTH; i++)
+            {
+                seq->note_value[j][i].type = NO_NOTE;
+                seq->note_value[j][i].length = NO_NOTE;
+                seq->note_value[j][i].protected = false;
+            }
+            seq->note_value[j][0].type = NEXT_NOTE;
+        }
+        seq->total_notes = 0;
+        seq->current_page = 0;
+        seq->selected_step = 0;
+        seq->active = false;
+        seq->harmonize = 0;
+        seq->lowest_octave = 255;
+}
+
+
 void select_page(sequencer_t *self, int8_t direction)
 {
     self->sequencers[self->active_sequence].current_page = self->sequencers[self->active_sequence].current_page + direction;

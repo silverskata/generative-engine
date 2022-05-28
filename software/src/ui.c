@@ -3,11 +3,12 @@
 
 // UI
 char menu_main[][12] = {"Play", "Main", "Edit", "Generate","Song", "Save/Load","Settings"};
-char menu_sequencers[][12] = {"Sequence 1", "Sequence 2", "Sequence 3"};
-char menu_edit[][12] = {"note", "length", ""};
-char menu_generate[][12] = {"Create", "Complete", "Dynamic"};
-char generate_create[][12] = {"Keys", "Scale", "Tempo", "Parts"};
-char generate_dynamic[][12] = {"Keys", "Scales", "Tempo"}; // CHECK WHATS NEEDED
+
+char menu_generate[][12] = {"Sequence 1", "Sequence 2", "Key", "Scale","Harmony"};
+char possible_sequence[][12]={"Active","Probability","Scaling","Range","Delay","Changes","Root","Second","Third","Fourth","Fifth","Sixth","Seventh"};
+char possible_key[][12]={"Active","Probability","Scaling","Range","Delay","D$","A$","E$","B$","F","C","G","D","A","E","B","F#"};
+char possible_scale[][12]={"Active","Probability","Scaling","Range","Delay","Ionic","Dorian","Phrygian","Lydian","Mixolydian","Aeolian","Locrian"};
+char possible_harmony[][12]={"Active","Probability","Scaling","Range","Delay","Duration","Root","Second","Third","Fourth","Fifth","Sixth","Seventh"};
 
 uint8_t note_y[] = {49, 47, 44, 42, 39, 37, 34, 32, 29, 27, 24, 22, 19, 17, 14};
 
@@ -35,26 +36,115 @@ void UI_Test(int val1, int val2, int val3, controller_t *control){
     ssd1306_show(&disp);
 }
 
-
-void UI_generate_menu(generator_t *gen, sequence_t * s)
-{
-    ssd1306_clear(&disp);
-    char test[] = "generating random.";
-    display_write_tight(&disp, 5, 10, 2, test);
-    char buff[30];
-    sprintf(buff, "%d%d%d%d%d%d%d%d", s->note_value[0][0].value,s->note_value[0][1].value,s->note_value[0][2].value,s->note_value[0][3].value,s->note_value[0][4].value,s->note_value[0][5].value,s->note_value[0][6].value,s->note_value[0][7].value);
-    display_write_tight(&disp, 5, 30, 2, buff);
-        char buff3[30];
-    sprintf(buff3, "%d%d%d%d%d%d%d%d", s->note_value[0][0].octave,s->note_value[0][1].octave,s->note_value[0][2].octave,s->note_value[0][3].octave,s->note_value[0][4].octave,s->note_value[0][5].octave,s->note_value[0][6].octave,s->note_value[0][7].octave);
-    display_write_tight(&disp, 5, 40, 2, buff3);
-    char buff2[30];
-    sprintf(buff2, "Gen c %d ", gen->cycles);
-    display_write_tight(&disp, 5, 50, 2, buff2);
-    
-    ssd1306_show(&disp);
+void left_arrow(uint8_t x,uint8_t y){
+    display_line(&disp, x, y, x + 10, y);
+    display_line(&disp, x, y, x + 3, y + 3);
+    display_line(&disp, x, y ,x + 3, y - 3);
 }
 
-void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t selection_state, note control_note)
+void right_arrow(uint8_t x,uint8_t y){
+    display_line(&disp, x, y, x+10, y);
+    display_line(&disp, x + 7, y -3, x + 10, y);
+    display_line(&disp, x + 7, y + 3, x + 10, y);
+}
+
+void UI_generate_menu(uint8_t selection, uint8_t sub_selection)
+{
+    ssd1306_clear(&disp);
+    uint8_t scaling = 0;
+    switch(selection){
+    case 0:
+    case 1:
+    for(uint8_t i = 0; i<4;i++){
+        if(sub_selection >4)
+        {
+         display_write_tight(&disp, 20,22+ i*10,3,possible_sequence[i + sub_selection -4]);
+         display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection,i + sub_selection -4));
+        }
+        else
+        {
+            display_write_tight(&disp, 20,22+ i*10,3,possible_sequence[i]);
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection, i));
+        }
+    }
+    break;
+    case 2:
+        for(uint8_t i = 0; i<4;i++){
+        if(sub_selection >4)
+        {
+            display_write_tight(&disp, 20,22+ i*10,3,possible_key[i + sub_selection -4]);
+            if(sub_selection>5)
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection,i + sub_selection -3));
+            else
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection,i + sub_selection -4));
+        }
+        else
+        {    
+            display_write_tight(&disp, 20,22+ i*10,3,possible_key[i]);
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection, i));
+        }
+    }
+    scaling = 12;
+    break;
+    case 3:
+        for(uint8_t i = 0; i<4;i++){
+        if(sub_selection >4)
+        {    
+            display_write_tight(&disp, 20,22+ i*10,3,possible_scale[i + sub_selection -4]);
+            if(sub_selection>5)
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection,i + sub_selection -3));
+            else
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection,i + sub_selection -4));
+        }
+        else
+        {    
+            display_write_tight(&disp, 20,22+ i*10,3,possible_scale[i]);
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection, i));
+        }
+    }
+    scaling = 10;
+    break;
+    case 4:
+    scaling = 5; 
+        for(uint8_t i = 0; i<4;i++){
+        if(sub_selection >4)
+        {
+            display_write_tight(&disp, 20,22+ i*10,3,possible_harmony[i + sub_selection -4]);
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection,i + sub_selection -4));
+        }
+        else
+        {
+            display_write_tight(&disp, 20,22+ i*10,3,possible_harmony[i]);
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection, i));
+        }
+        
+    }
+    break;
+    }
+
+    switch(sub_selection){
+    case 0:
+        left_arrow(0,14);
+        right_arrow(114,14);
+    break;
+    case 1:
+        right_arrow(0,26);
+    break;
+    case 2:
+        right_arrow(0,36);
+    break;
+    case 3:
+        right_arrow(0,46);
+    break;    
+    default:
+        right_arrow(0,56);
+    break;    
+    }
+    display_write_tight(&disp, 25 + scaling, 10, 2, menu_generate[selection]);
+
+}
+
+void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t selection_state, note control_note, int8_t sub_select)
 {
     if(menu_active)UI_menu_open(selection_state);
       else{
@@ -74,6 +164,7 @@ void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t 
         main_menu(seq);
         break;
     case 3: // Generate menu
+        UI_generate_menu(selection_state,sub_select);
         break;
     case 2: // Step editor
         ssd1306_clear(&disp);
@@ -211,6 +302,7 @@ void UI_startup()
     draw_logo(&disp);
     sleep_ms(300);
 }
+
 
 uint8_t key_value_map[] = {KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_A, KEY_B, 0, 0, 3, 0, 1, 2, 5, 6, 0};
 

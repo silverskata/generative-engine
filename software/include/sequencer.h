@@ -62,6 +62,8 @@ typedef struct
 
 void init_sequencer(sequencer_t *self, sequence_t *s1, sequence_t *s2, repeating_timer_t *timer);
 
+void clear_sequence(sequence_t  *seq);
+
 void set_note(sequencer_t *seq, sequence_t *self, uint16_t step, note value);
 
 void select_step(sequence_t *self, int8_t direction);
