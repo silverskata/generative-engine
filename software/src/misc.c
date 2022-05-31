@@ -7,6 +7,9 @@ void output_setup()
     gpio_init(29);
     gpio_set_dir(29, true);
     gpio_put(29, 1);
+    gpio_init(11);
+    gpio_set_dir(11, true);
+    gpio_put(11, GATE_OFF);
     gpio_init(GATE1);
     gpio_set_dir(GATE1, true);
     gpio_put(GATE1, GATE_OFF);

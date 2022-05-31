@@ -102,11 +102,16 @@ void menu_active_state(controller_t *self, uint16_t button_press)
 
 
 void dynamic_generation(controller_t * control)
-{
+{       if(control->gen_harmony->active)
         gen_harmony_run(control->gen_harmony,&control->sequencer->sequencers[1]);
-        //gen_scale_run(control->gen_scale,control->sequencer);
+        if(control->gen_scale->active)
+        gen_scale_run(control->gen_scale,control->sequencer);
+        if(control->gen_key->active)
         gen_key_run(control->gen_key,control->sequencer);
+        if(control->gen_s1->active)
         gen_sequence_run(control->gen_s1,&control->sequencer->sequencers[0]);
+        if(control->gen_s2->active)
+        gen_sequence_run(control->gen_s2,&control->sequencer->sequencers[1]);
 }
 char buffer[15];
 
@@ -277,7 +282,7 @@ void init_controller(controller_t *control, button_control_t *buttons, sequencer
     control->note.length = QUARTERNOTE;
     control->note.legato = QUARTERNOTE - 1;
     control->note.value = 0;
-    control->note.octave = 0;
+    control->note.octave = 1;
     control->note.modulation = 0;
     control->note.type = REGULAR_NOTE;
     control->dynamic_generation = false;
@@ -293,6 +298,8 @@ void init_controller(controller_t *control, button_control_t *buttons, sequencer
     create_generator(&gen_harmony);
     create_generator(&gen_scale);
     create_generator(&gen_key);
+    for(uint8_t i=0;i<6;i++)
+        gen_scale.possible_val[7+i] = 0;
     gen_sequence_setup(&gen_s1,&seq->sequencers[0]);
     gen_sequence_setup(&gen_s2,&seq->sequencers[1]);
 
@@ -624,7 +631,7 @@ void update_state_main(controller_t *self, uint16_t button_press, int16_t keyboa
 
 void update_state_generation(controller_t *self, uint16_t button_press, int8_t encoder_direction)
 {
-        int8_t selection_direction = 0;
+    int8_t selection_direction = 0;
     if (is_input(button_press))
         switch (button_press >> 1)
         {
@@ -686,26 +693,25 @@ void update_state_generation(controller_t *self, uint16_t button_press, int8_t e
         {
         case 0: // Sequence 1
             gen_sequence_set(self->gen_s1,self->selection_sub_state,selection_direction);
-            break;
+        break;
         case 1: // Sequence 2
             gen_sequence_set(self->gen_s2,self->selection_sub_state,selection_direction);
-            break;
+        break;
         case 2: // Key
             if(self->selection_sub_state >5)
-            gen_key_set(self->gen_key,self->selection_sub_state+1,selection_direction);
+                gen_key_set(self->gen_key, self->selection_sub_state + 1, selection_direction);
             else
-            gen_key_set(self->gen_key,self->selection_sub_state,selection_direction);
-            break;
+                gen_key_set(self->gen_key, self->selection_sub_state, selection_direction);
+        break;
         case 3: // scale
             if(self->selection_sub_state >5)
-            gen_scale_set(self->gen_scale,self->selection_sub_state+1,selection_direction);
+                gen_scale_set(self->gen_scale, self->selection_sub_state + 1, selection_direction);
             else
-            gen_scale_set(self->gen_scale,self->selection_sub_state,selection_direction);
-            
-            break;
+                gen_scale_set(self->gen_scale, self->selection_sub_state, selection_direction);
+        break;
         case 4: // harmony
-            gen_harmony_set(self->gen_harmony,self->selection_sub_state,selection_direction);
-            break;
+            gen_harmony_set(self->gen_harmony, self->selection_sub_state, selection_direction);
+        break;
         }
 }
 /*** TODO ***/

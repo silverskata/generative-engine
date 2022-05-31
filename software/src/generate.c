@@ -26,7 +26,7 @@ uint16_t gen_random(uint8_t amount)
 
 
 bool delayed(generator_t *gen){
-    if(gen->cycles < gen->delay -1) {
+    if(gen->delay >0 && gen->cycles < gen->delay -1) {
         gen->cycles ++;
         return true;
     }
@@ -240,37 +240,41 @@ void gen_sequence_set(generator_t *gen, uint8_t selection, int8_t direction){
     }
 }
 bool gen_sequence_run(generator_t *gen,sequence_t * seq){
-if(gen->cycles < gen->delay) {
-        gen->cycles ++;
-        return false;
-    }
-    if(gen->direction==0){
-        if(gen_random(2))
-            gen->direction = 1;
-        else 
-            gen->direction = -1;
-    }
-
-     for(int16_t i = 0; i < seq->last_step && gen->changes_made < gen->max_changes; i++){
-        if(seq->note_value[seq->current_page][i].type==REGULAR_NOTE && !seq->note_value[seq->current_page][i].protected){
-            if(gen_random(100)<gen->current_prob){
+    if(delayed(gen)) return false;
+    if(gen->range>1) gen->range = gen_random(gen->range)+1;
+    if(gen_random(100)<gen->current_prob){
+        int8_t count_dir; //avoid trend for earlier notes to go lower and viceversa
+        uint8_t temprange = 1;
+            if(gen_random(2))
+                count_dir = 1;
+            else 
+                count_dir = -1;
+        random_direction(gen);
+        for(int32_t i = gen_random(seq->last_step); gen->changes_made < gen->max_changes && i>-1 && i<seq->last_step; i = i +(1* count_dir)){
+            if(seq->note_value[seq->current_page][i].type==REGULAR_NOTE && !seq->note_value[seq->current_page][i].protected)
+            {
+                if(gen->range>1) temprange = gen_random(gen->range)+1;
                 note temp = seq->note_value[seq->current_page][i];
-                int8_t val = temp.value +  (1 * gen->direction);
-                 if(val<0){ 
+                int8_t val = temp.value +  (temprange * gen->direction);
+                if(val<0){
                     val += 7;
                     if(temp.octave > 0)
                         temp.octave --;
                 }
-                else if(val>6){ 
+                else if(val>6){
                     val -=6;
-                    if(temp.octave<5)
+                    if(temp.octave<3)
                         temp.octave ++;
                 }
                 int8_t count = 0;
                 while(!gen->possible_val[val+count]){
-                    if(val + count > 6) count = -val;
+                    if(val + count > 6) count = (val * -1);
                     else count++;
                 }
+                if(val+count>6)
+                    count -=7;
+                else if(val+count<0)
+                    count+=7;
                 temp.value = val+count;
                 gen->changes_made ++;
                 gen->changed = true;
@@ -295,18 +299,32 @@ if(gen->cycles < gen->delay) {
 
 bool gen_scale_run(generator_t *gen,sequencer_t * seq){
     if(delayed(gen)) return false;
-    if(gen->current_prob < gen_random(100)){
+    if(gen->current_prob > gen_random(100)){
         random_direction(gen);
-        uint8_t count;
-        if(gen->range>1)
-            count=gen_random(gen->range) + 1;
-        else count = 1;
-        while(!gen->possible_val[seq->current_scale.number + count * gen->direction] && count<7)
+        int16_t chosen_scale= seq->current_scale.number + gen->direction * (gen_random(gen->range) + 1);
+        while(chosen_scale<0)
+            chosen_scale += 7;
+        while(chosen_scale > 6)
+            chosen_scale -= 7;
+        uint8_t count = 0; //failsafe
+        while(!gen->possible_val[chosen_scale] && count <7){
+
+            if(gen->direction>0){
+                chosen_scale ++;
+                if(chosen_scale>6)
+                chosen_scale=0;
+            }
+            else{
+                chosen_scale --;
+                if(chosen_scale<0)
+                chosen_scale=6;
+            }
             count++;
-        if(count<7)
-            seq->current_scale = scales[seq->current_scale.number + count * gen->direction];
+        }
+        seq->current_scale = scales[chosen_scale];
         gen->changed = true;
     }
+    gen->direction = 0;
     return gen_update(gen);
 }
 

@@ -89,7 +89,7 @@ int encoder_direction = 0; */
 
         //UI AND SCREEN REFRESH
         if(time-time_us_64() > 30000){
-        UI_main_menu(&sequencer, controller.menu_state, controller.menu_active, controller.selection_state, controller.note, controller.selection_sub_state);
+        UI_main_menu(&sequencer, controller.menu_state, controller.menu_active, controller.selection_state, controller.note, controller.selection_sub_state, controller.dynamic_generation);
         time = time_us_64();
         } 
 

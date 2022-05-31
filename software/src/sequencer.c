@@ -162,6 +162,7 @@ void free_play_released(sequencer_t *self, uint16_t value)
 int64_t blink_off(alarm_id_t id, void *user_data)
 {
     gpio_put(29, 0);
+    gpio_put(11, GATE_OFF);
     return 0;
 }
 
@@ -170,6 +171,7 @@ void play_step(sequencer_t *self)
     if (self->current_step % 8 == 0)
     {
         gpio_put(29, 1);
+        gpio_put(11, GATE_ON);
         add_alarm_in_ms(20, blink_off, NULL, false);
     }
     for (uint8_t i = 0; i < SEQUENCER_AMOUNT; i++)

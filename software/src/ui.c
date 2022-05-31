@@ -56,10 +56,10 @@ void UI_generate_menu(uint8_t selection, uint8_t sub_selection)
     case 0:
     case 1:
     for(uint8_t i = 0; i<4;i++){
-        if(sub_selection >4)
+        if(sub_selection > 4)
         {
-         display_write_tight(&disp, 20,22+ i*10,3,possible_sequence[i + sub_selection -4]);
-         display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection,i + sub_selection -4));
+            display_write_tight(&disp, 20,22+ i*10,3,possible_sequence[i + sub_selection -4]);
+            display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection, i + sub_selection -4));
         }
         else
         {
@@ -70,7 +70,7 @@ void UI_generate_menu(uint8_t selection, uint8_t sub_selection)
     break;
     case 2:
         for(uint8_t i = 0; i<4;i++){
-        if(sub_selection >4)
+        if(sub_selection > 4)
         {
             display_write_tight(&disp, 20,22+ i*10,3,possible_key[i + sub_selection -4]);
             if(sub_selection>5)
@@ -88,7 +88,7 @@ void UI_generate_menu(uint8_t selection, uint8_t sub_selection)
     break;
     case 3:
         for(uint8_t i = 0; i<4;i++){
-        if(sub_selection >4)
+        if(sub_selection > 4)
         {    
             display_write_tight(&disp, 20,22+ i*10,3,possible_scale[i + sub_selection -4]);
             if(sub_selection>5)
@@ -107,7 +107,7 @@ void UI_generate_menu(uint8_t selection, uint8_t sub_selection)
     case 4:
     scaling = 5; 
         for(uint8_t i = 0; i<4;i++){
-        if(sub_selection >4)
+        if(sub_selection > 4)
         {
             display_write_tight(&disp, 20,22+ i*10,3,possible_harmony[i + sub_selection -4]);
             display_write_tight(&disp, 110,22+ i*10,3, gen_to_string(selection,i + sub_selection -4));
@@ -144,7 +144,7 @@ void UI_generate_menu(uint8_t selection, uint8_t sub_selection)
 
 }
 
-void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t selection_state, note control_note, int8_t sub_select)
+void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t selection_state, note control_note, int8_t sub_select, bool dynamic)
 {
     if(menu_active)UI_menu_open(selection_state);
       else{
@@ -154,14 +154,14 @@ void UI_main_menu(sequencer_t *seq, uint8_t menu_state,bool menu_active, int8_t 
         ssd1306_clear(&disp);
         UI_draw_sheet();
         UI_draw_bar(seq, (int)(seq->current_step / 32), seq->current_step, menu_state);
-        main_menu(seq);
+        main_menu(seq, dynamic);
         break;
     case 1: // Menu Closed
         ssd1306_clear(&disp);
         UI_draw_sheet();
         UI_draw_bar(seq, (int)(seq->current_step / 32), seq->current_step, menu_state);
         UI_main_selection(selection_state);
-        main_menu(seq);
+        main_menu(seq, dynamic);
         break;
     case 3: // Generate menu
         UI_generate_menu(selection_state,sub_select);
@@ -244,7 +244,7 @@ void UI_menu_open(uint8_t selected){
 
     display_box(&disp,5,selected*9,49,9);
 }
-void main_menu(sequencer_t *seq)
+void main_menu(sequencer_t *seq, bool dynamic)
 {
     char temp_buf[7];
     if (seq->tempo < 100)
@@ -255,6 +255,13 @@ void main_menu(sequencer_t *seq)
     char bar_buf[2];
     sprintf(bar_buf, "%d", (int)(seq->current_step / 32) + 1);
     display_write_tight(&disp, 0, 16, 2, bar_buf); // CURRENT BAR
+
+    char dyn_buf[2];
+    
+    display_circle(&disp, 123,15,3);
+    if(dynamic)
+    display_fill_circle(&disp, 123,15,2);
+
     char seq_buf[10];
     sprintf(seq_buf, "se %d", seq->active_sequence + 1);
     display_write_tight(&disp, 44, 55, 2, seq_buf); // ACTIVE SEQUENCER
